@@ -2,32 +2,39 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { UsuarioService } from 'src/usuario/usuario.service';
 import * as bcrypt from "bcrypt"
 import { JwtService } from '@nestjs/jwt';
+import { Usuario } from 'src/usuario/entities/usuario.entity';
 
 export interface UsuarioPayload {
-  sub : number,
-  nomeUsuario : string
+  sub: number,
+  nomeUsuario: string
 }
-
+  
 @Injectable()
 export class AutenticacaoService {
   constructor(
     private usuarioService: UsuarioService,
     private jwtService: JwtService
   ) { }
-  async login(email: string, senha: string) {
-    const usuario = await this.usuarioService.buscaUsuarioPorEmail(email)
-    console.log(senha, usuario.senha)
-    const usuarioAutenticado = await bcrypt.compare(senha, usuario.senha)
-    if (!usuarioAutenticado) {
-      throw new UnauthorizedException("Credenciais inválidas")
-    }
-    const payload : UsuarioPayload = {
+  async login(usuario: Usuario) { 
+    const payload: UsuarioPayload = {
       sub: usuario.id,
       nomeUsuario: usuario.nome,
-    }
+    };
+
     return {
-      token_acesso: await this.jwtService.signAsync(payload), 
+      token_acesso: await this.jwtService.signAsync(payload),
     };
   }
-
+  async validarUsuario(email: string, senha: string): Promise<any> {
+    const usuario = await this.usuarioService.buscaUsuarioPorEmail(email);
+    if (!usuario) {
+      return null;
+    }
+    const senhasCombinam = await bcrypt.compare(senha, usuario.senha);
+    if (senhasCombinam) {
+      const { senha: _, ...resultado } = usuario;
+      return resultado;
+    }
+    return null;
+  }
 }
