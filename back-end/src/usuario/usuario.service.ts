@@ -16,7 +16,8 @@ export class UsuarioService {
     if(usuarioExiste){
       throw new ConflictException("Email já cadastrado")
     }
-    const novoUsuario = await this.usuarioRepository.create(createUsuarioDto)
+    const novoUsuario = new Usuario()
+    Object.assign(novoUsuario, createUsuarioDto)
     return await this.usuarioRepository.save(novoUsuario);
   }
 

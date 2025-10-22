@@ -3,7 +3,7 @@ import { UsuarioService } from 'src/usuario/usuario.service';
 import * as bcrypt from "bcrypt"
 import { JwtService } from '@nestjs/jwt';
 
-interface UsuarioPayload {
+export interface UsuarioPayload {
   sub : number,
   nomeUsuario : string
 }
@@ -16,6 +16,7 @@ export class AutenticacaoService {
   ) { }
   async login(email: string, senha: string) {
     const usuario = await this.usuarioService.buscaUsuarioPorEmail(email)
+    console.log(senha, usuario.senha)
     const usuarioAutenticado = await bcrypt.compare(senha, usuario.senha)
     if (!usuarioAutenticado) {
       throw new UnauthorizedException("Credenciais inválidas")

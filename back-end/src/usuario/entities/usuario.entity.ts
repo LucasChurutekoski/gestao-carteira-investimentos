@@ -20,7 +20,6 @@ export class Usuario {
         async hashearSenha(){
             const salt = 10;
             this.senha = await bcrypt.hash(this.senha, salt)
-
         }
 }
 

@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { AutenticacaoGuard } from 'src/autenticacao/autenticacao.guard';
 
 @Controller('usuarios')
 export class UsuarioController {
@@ -21,7 +22,7 @@ export class UsuarioController {
   findOne(@Body("email") email: string) {
     return this.usuarioService.buscaUsuarioPorEmail(email);
   }
-
+  @UseGuards(AutenticacaoGuard)
   @Patch(':id')
   update(@Param('id') id: number, @Body() updateUsuarioDto: UpdateUsuarioDto) {
     return this.usuarioService.atualizaUsuario(+id, updateUsuarioDto);
