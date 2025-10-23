@@ -57,6 +57,7 @@ export class UsuarioService {
         throw new ConflictException("email já cadastrado no sistema")
       }
     }
+    delete updateUsuarioDto.senha
     Object.assign(usuarioExiste, updateUsuarioDto)
     return await this.usuarioRepository.save(usuarioExiste)
   }

@@ -1,6 +1,7 @@
 import { Exclude } from "class-transformer";
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import * as bcrypt from 'bcrypt';
+import { Meta } from "src/metas/entities/meta.entity";
 
 @Entity({name : 'usuarios'})
 export class Usuario {
@@ -14,6 +15,9 @@ export class Usuario {
     @Exclude()
     @Column({name : "senha"})
     senha: string
+
+    @OneToMany(()=> Meta, (meta) => meta.usuario)
+    metas : Meta[]
 
     
     @BeforeInsert()

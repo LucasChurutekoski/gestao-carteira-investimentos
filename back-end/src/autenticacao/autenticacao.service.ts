@@ -8,32 +8,34 @@ export interface UsuarioPayload {
   sub: number,
   nomeUsuario: string
 }
-
 @Injectable()
 export class AutenticacaoService {
   constructor(
     private usuarioService: UsuarioService,
     private jwtService: JwtService
   ) { }
-  async login(usuario: Usuario) {
-    const payload: UsuarioPayload = {
-      sub: usuario.id,
-      nomeUsuario: usuario.nome,
+
+  async validarUsuario(email: string, senha: string): Promise<any> {
+    const emailNormalizado = email.toLowerCase()
+    const usuario = await this.usuarioService.buscaUsuarioPorEmail(emailNormalizado)
+    if (!usuario || !usuario.senha) {
+      return null
+    }
+    const senhasCombinam = await bcrypt.compare(senha, usuario.senha)
+    if (senhasCombinam) {
+      const { senha: _, ...resultado } = usuario
+      return resultado
+    }
+    return null
+  }
+
+  async login(usuario : Usuario){
+    const payload : UsuarioPayload = {
+      sub : usuario.id,
+      nomeUsuario : usuario.nome
     };
     return {
-      token_acesso: await this.jwtService.signAsync(payload),
-    };
-  }
-  async validarUsuario(email: string, senha: string): Promise<any> {
-    const usuario = await this.usuarioService.buscaUsuarioPorEmail(email);
-    if (!usuario) {
-      return null;
+      token_acesso : await this.jwtService.signAsync(payload)
     }
-    const senhasCombinam = await bcrypt.compare(senha, usuario.senha);
-    if (senhasCombinam) {
-      const { senha: _, ...resultado } = usuario;
-      return resultado;
-    }
-    return null;
   }
 }
