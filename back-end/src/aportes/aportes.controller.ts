@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { AportesService } from './aportes.service';
 import { CreateAporteDto } from './dto/create-aporte.dto';
 import { UpdateAporteDto } from './dto/update-aporte.dto';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('aportes')
 export class AportesController {
   constructor(private readonly aportesService: AportesService) {}
