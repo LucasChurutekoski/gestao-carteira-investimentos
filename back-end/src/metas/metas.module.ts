@@ -10,5 +10,6 @@ import { Meta } from './entities/meta.entity';
   ],
   controllers: [MetasController],
   providers: [MetasService],
+  exports : [MetasService]
 })
 export class MetasModule {}

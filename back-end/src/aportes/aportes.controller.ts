@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { AportesService } from './aportes.service';
 import { CreateAporteDto } from './dto/create-aporte.dto';
 import { UpdateAporteDto } from './dto/update-aporte.dto';
@@ -9,9 +9,11 @@ import { AuthGuard } from '@nestjs/passport';
 export class AportesController {
   constructor(private readonly aportesService: AportesService) {}
 
-  @Post()
-  create(@Body() createAporteDto: CreateAporteDto) {
-    return this.aportesService.create(createAporteDto);
+  @Post(":id")
+  create(@Param("id") id : number, @Body() createAporteDto: CreateAporteDto, @Req() req : any) {
+    const usuario = req.user
+    console.log(id)
+    return this.aportesService.realizarAporte(createAporteDto, id, usuario);
   }
 
   @Get()
@@ -21,6 +23,7 @@ export class AportesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
+    console.log(id)
     return this.aportesService.findOne(+id);
   }
 
