@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AutenticacaoModule } from './autenticacao/autenticacao.module';
 import { MetasModule } from './metas/metas.module';
+import { AportesModule } from './aportes/aportes.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { MetasModule } from './metas/metas.module';
     }),
     UsuarioModule,
     AutenticacaoModule,
-    MetasModule
+    MetasModule,
+    AportesModule
   ],
   controllers: [AppController],
   providers: [AppService],

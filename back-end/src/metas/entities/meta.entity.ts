@@ -9,6 +9,8 @@ export class Meta {
     nome : string
     @Column({name : "valor_alvo", type : "decimal", precision : 10, scale : 2})
     valorAlvo : number
+    @Column({name : "valor_atual", type : "decimal", precision : 10, scale : 2, default : 0})
+    valorAtual : number
     @Column({name : 'data_alvo', type : "date"})
     dataAlvo : Date
     

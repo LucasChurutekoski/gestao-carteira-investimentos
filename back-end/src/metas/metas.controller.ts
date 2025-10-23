@@ -16,22 +16,26 @@ export class MetasController {
   }
 
   @Get()
-  findAll() {
-    return this.metasService.bsucarTodasAsMetas();
+  findAll(@Req() req : any) {
+    const usuario = req.user
+    return this.metasService.buscarTodasAsMetas(usuario);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.metasService.findOne(+id);
+  findOne(@Param('id') id: number, @Req() req : any) {
+    const usuario = req.user
+    return this.metasService.buscarMetaPorId(+id, usuario);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMetaDto: UpdateMetaDto) {
-    return this.metasService.update(+id, updateMetaDto);
+  update(@Param('id') id: number, @Body() updateMetaDto: UpdateMetaDto, @Req() req : any) {
+    const usuario = req.user
+    return this.metasService.atualizarMetaPeloId(+id, updateMetaDto, usuario);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.metasService.remove(+id);
+  remove(@Param('id') id: number, @Req() req : any) {
+    const usuario = req.user
+    return this.metasService.removermetaPeloId(+id, usuario);
   }
 }

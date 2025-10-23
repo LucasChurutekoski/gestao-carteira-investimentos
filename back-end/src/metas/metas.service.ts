@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMetaDto } from './dto/create-meta.dto';
 import { UpdateMetaDto } from './dto/update-meta.dto';
 import { UsuarioPayload } from 'src/autenticacao/autenticacao.service';
@@ -20,20 +20,46 @@ export class MetasService {
     return metaCriada;
   }
 
-  bsucarTodasAsMetas() {
-    
-    return `This action returns all metas`;
+  async buscarTodasAsMetas(usuario) {
+    const metas = await this.metaRepository.find({
+      where: { usuario: { id: usuario.userId } }
+    })
+    if (!metas) {
+      throw new NotFoundException("Usuário não tem nenhuma meta")
+    }
+    return metas;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} meta`;
+  async buscarMetaPorId(id: number, usuario) {
+    const meta = await this.metaRepository.findOne({
+      where: { usuario: { id: usuario.userId }, id: id }
+    })
+    if (!meta) {
+      throw new NotFoundException("meta não encontrada")
+    }
+    return meta;
   }
 
-  update(id: number, updateMetaDto: UpdateMetaDto) {
-    return `This action updates a #${id} meta`;
+  async atualizarMetaPeloId(id: number, updateMetaDto: UpdateMetaDto, usuario) {
+    const metaExiste = await this.metaRepository.findOne({
+      where: { usuario: { id: usuario.userId }, id: id }
+    })
+    if (!metaExiste) {
+      throw new NotFoundException("meta não encontrada")
+    }
+    Object.assign(metaExiste, updateMetaDto)
+    const metaSalva = await this.metaRepository.save(metaExiste)
+    return metaSalva;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} meta`;
+  async removermetaPeloId(id: number, usuario) {
+    const metaExiste = await this.metaRepository.findOne({
+      where: { usuario: { id: usuario.userId }, id: id }
+    })
+    if (!metaExiste) {
+      throw new NotFoundException("meta não encontrada")
+    }
+    const metaExlcuida = await this.metaRepository.delete(metaExiste.id)
+    return `Meta do id ${id} removida com sucesso`;
   }
 }
