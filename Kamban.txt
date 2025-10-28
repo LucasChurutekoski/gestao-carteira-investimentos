@@ -1,0 +1,32 @@
+Fazer
+{
+    
+    Serviço de Busca de Ativos
+    Salvar ativos no banco de dados
+    Atualizar preço dos ativos a cada 15/30 minutos
+
+}
+
+Em Progresso 
+{
+    Revisão controllers e services das entidades
+
+
+}
+
+Revisar 
+{
+    
+    
+
+}
+
+Concluido
+{
+    Criação e associação da carteira ao Usuario
+    Busca de Ativo na api
+    Entidade Transação
+    Entidade Posição
+    Entidade Usuario
+    Relações de Carteira com posição e Transação
+}

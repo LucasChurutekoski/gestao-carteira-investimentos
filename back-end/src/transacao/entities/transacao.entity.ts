@@ -1,0 +1,24 @@
+import { Ativo } from "src/ativo/entities/ativo.entity";
+import { Carteira } from "src/carteira/entities/carteira.entity";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+
+@Entity('transacoes')
+export class Transacao {
+    @PrimaryGeneratedColumn('uuid', {name : "id_transacao"})
+    idTransacao : string
+    @Column({name :'tipo'})
+    tipo : string
+    @Column({name : "quantidade", type : "integer"})
+    quantidade : number
+    @Column({name : "preco_unitario", type : "decimal", precision : 2})
+    precoUnitario : number
+    @Column({name : "data_compra", type : 'timestamp'})
+    dataCompra : Date
+
+    @ManyToOne(()=>Carteira,(carteira) => carteira.transacoes)
+    carteira : Carteira
+
+    @ManyToOne(() => Ativo, (ativo) => ativo.transacoes)
+    ativo : Ativo
+
+}

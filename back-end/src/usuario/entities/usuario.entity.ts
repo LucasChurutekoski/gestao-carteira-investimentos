@@ -1,6 +1,7 @@
 import { Exclude } from "class-transformer";
-import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import * as bcrypt from 'bcrypt';
+import { Carteira } from "src/carteira/entities/carteira.entity";
 
 @Entity({ name: 'usuarios' })
 export class Usuario {
@@ -14,6 +15,11 @@ export class Usuario {
     @Exclude()
     @Column({ name: "senha" })
     senha: string
+
+    @OneToOne(()=> (Carteira), carteira => carteira.usuario,{
+        cascade : true
+    })
+    carteira : Carteira
 
     @BeforeInsert()
     async hashearSenha() {

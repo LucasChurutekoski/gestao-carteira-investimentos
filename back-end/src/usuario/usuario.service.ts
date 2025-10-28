@@ -4,10 +4,14 @@ import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { Usuario } from './entities/usuario.entity';
+import { Carteira } from 'src/carteira/entities/carteira.entity';
 
 @Injectable()
 export class UsuarioService {
-  constructor(@InjectRepository(Usuario)private readonly usuarioRepository: Repository<Usuario>) {
+  constructor(
+    @InjectRepository(Usuario)private readonly usuarioRepository: Repository<Usuario>,
+    @InjectRepository(Carteira) private readonly carteiraRepository : Repository<Carteira>
+) {
   }
 
   async criaUsuario(createUsuarioDto: CreateUsuarioDto) {
@@ -16,8 +20,10 @@ export class UsuarioService {
     if(usuarioExiste){
       throw new ConflictException("Email já cadastrado")
     }
-    const novoUsuario = new Usuario()
-    Object.assign(novoUsuario, createUsuarioDto)
+    const novaCarteira = this.carteiraRepository.create() 
+    const novoUsuario = this.usuarioRepository.create({
+      ...createUsuarioDto, carteira : novaCarteira
+    })
     return await this.usuarioRepository.save(novoUsuario);
   }
 
