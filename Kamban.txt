@@ -9,6 +9,10 @@ Fazer
 
 Em Progresso 
 {
+    Criação de uma transação
+        salvar a transação
+        atualizar valores de preco médio, e valor total da carteira
+
     Revisão controllers e services das entidades
 
 

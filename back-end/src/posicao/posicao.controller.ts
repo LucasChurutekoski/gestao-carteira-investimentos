@@ -7,10 +7,6 @@ import { UpdatePosicaoDto } from './dto/update-posicao.dto';
 export class PosicaoController {
   constructor(private readonly posicaoService: PosicaoService) {}
 
-  @Post()
-  create(@Body() createPosicaoDto: CreatePosicaoDto) {
-    return this.posicaoService.create(createPosicaoDto);
-  }
 
   @Get()
   findAll() {

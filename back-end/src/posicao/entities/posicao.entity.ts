@@ -9,6 +9,10 @@ export class Posicao {
     quantidade :  number
     @Column({name : "preco_medio", type : "decimal", precision : 10, scale : 2})
     precoMedio : number
+    @Column({name : "valor_total_investido", type : "decimal", precision : 10, scale : 2})
+    valorTotalInvestido : number
+    @Column({name : "valor_atual", type : "decimal", precision : 10, scale : 2})
+    valorAtual : number
 
     @ManyToOne(() => Carteira, (carteira) => carteira.posicoes)
     carteira : Carteira
