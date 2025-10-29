@@ -5,7 +5,7 @@ export class CreateTransacaoDto {
     @IsEnum(enumTipoTransacao)
     @IsNotEmpty({message : "tipoTransacao deve ser 'compra' ou 'venda'"})
     tipoTransacao : enumTipoTransacao
-    @IsInt({message : "quantidade do ativo deve ser um número"})
+    @IsNumber()
     quantidade : number
     @IsNumber()
     precoUnitario : number

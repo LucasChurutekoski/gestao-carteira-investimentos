@@ -6,7 +6,7 @@ import { Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typ
 export class Posicao {
     @PrimaryGeneratedColumn('uuid', {name : "id_posicao"})
     idPosicao : string
-    @Column({name : "quantidade", type : "integer"})
+    @Column({name : "quantidade", type : "decimal", precision : 30, scale : 18})
     quantidade :  number
     @Column({name : "preco_medio", type : "decimal", precision : 10, scale : 2})
     precoMedio : number
@@ -15,7 +15,9 @@ export class Posicao {
     @Column({name : "valor_atual", type : "decimal", precision : 10, scale : 2})
     valorAtual : number
 
-    @ManyToOne(() => Carteira, (carteira) => carteira.posicoes)
+    @ManyToOne(() => Carteira, (carteira) => carteira.posicoes, {
+        onDelete: 'CASCADE'
+    })
     carteira : Carteira
 
     @ManyToOne(() => Ativo, (ativo) => ativo.posicoes)

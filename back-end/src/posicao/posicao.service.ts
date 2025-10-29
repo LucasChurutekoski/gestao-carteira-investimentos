@@ -29,13 +29,13 @@ export class PosicaoService {
     const ativo = await manager.findOneBy(Ativo, { idAtivo: ativoId });
     if (!ativo) return;
 
-    let totalQuantidade = 0
-    let totalCusto = 0
+    let totalQuantidade = 0.0
+    let totalCusto = 0.0
 
     for (const transacao of transacoes) {
       if (transacao.tipoTransacao === enumTipoTransacao.compra) {
-        totalQuantidade += transacao.quantidade
-        totalCusto += transacao.quantidade * Number(transacao.precoUnitario)
+        totalQuantidade += Number(transacao.quantidade)
+        totalCusto += Number(transacao.quantidade) * Number(transacao.precoUnitario)
       }
       else if (transacao.tipoTransacao === enumTipoTransacao.venda) {
         totalQuantidade -= transacao.quantidade

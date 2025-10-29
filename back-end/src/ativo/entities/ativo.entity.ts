@@ -12,6 +12,8 @@ export class Ativo {
     nomeAtivo: string
     @Column({ name: "preco_atual", type: 'decimal', precision: 10, scale : 2 })
     precoAtual: number
+    @Column({name : "tipo_ativo", nullable : true})
+    tipoAtivo : string
 
     @OneToMany(() => Transacao, (transacao) => transacao.ativo)
     transacoes: Transacao[];

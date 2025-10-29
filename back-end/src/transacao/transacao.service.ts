@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateTransacaoDto } from './dto/create-transacao.dto';
 import { UpdateTransacaoDto } from './dto/update-transacao.dto';
 import { CarteiraService } from 'src/carteira/carteira.service';
@@ -28,6 +28,13 @@ export class TransacaoService {
     try {
       const carteira = usuario.carteira
       const ativo = await this.ativoService.buscarOuCriarAtivo(createTransacaoDto.ticker)
+      const quantidade = createTransacaoDto.quantidade
+
+      if (ativo.tipoAtivo == 'acao') {
+        if (!Number.isInteger(createTransacaoDto.quantidade)) {
+          throw new BadRequestException("quantidade inválida para este tipo de ativo")
+        }
+      }
       const novaTransacao = this.transacaoRepository.create({
         quantidade: createTransacaoDto.quantidade,
         precoUnitario: createTransacaoDto.precoUnitario,
@@ -36,6 +43,7 @@ export class TransacaoService {
         ativo: ativo,
         carteira: carteira
       })
+
       await queryRunner.manager.save(novaTransacao)
 
       await this.posicaoService.recalcularPosicao(queryRunner.manager, carteira.idCarteira, ativo.idAtivo)
@@ -51,13 +59,6 @@ export class TransacaoService {
     finally {
       await queryRunner.release()
     }
-
-
-
-  }
-
-  findAll() {
-    return `This action returns all transacao`;
   }
 
   findOne(id: number) {

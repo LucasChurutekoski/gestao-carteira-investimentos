@@ -1,5 +1,14 @@
 Fazer
 {
+    front end deve fazer a conta do precoUnitario e enviar calculado para o back-end {
+        // Dentro do app React Native, antes de enviar
+        const quantidade = 0.00016791;
+        const valorTotalGasto = 100.00;
+
+        // O App calcula o preço unitário!
+        const precoUnitario = valorTotalGasto / quantidade; 
+        // precoUnitario = 595557.14...
+    }
     Atualizar preço dos ativos a cada 15/30 minutos
 
 }
