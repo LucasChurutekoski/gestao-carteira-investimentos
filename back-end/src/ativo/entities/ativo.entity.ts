@@ -1,3 +1,4 @@
+import { Posicao } from "src/posicao/entities/posicao.entity";
 import { Transacao } from "src/transacao/entities/transacao.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -14,5 +15,8 @@ export class Ativo {
 
     @OneToMany(() => Transacao, (transacao) => transacao.ativo)
     transacoes: Transacao[];
+
+    @OneToMany(() => Posicao, (posicao) => posicao.ativo)
+    posicoes : Posicao[]
 
 }

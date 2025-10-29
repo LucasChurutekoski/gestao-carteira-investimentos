@@ -4,16 +4,21 @@ import { CarteiraController } from './carteira.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Carteira } from './entities/carteira.entity';
 import { PosicaoModule } from 'src/posicao/posicao.module';
+import { UsuarioModule } from 'src/usuario/usuario.module';
+import { TransacaoModule } from 'src/transacao/transacao.module';
 
 
 @Module({
-  imports : [
+  imports: [
     TypeOrmModule.forFeature([Carteira]),
-    forwardRef(() => PosicaoModule)
+    forwardRef(() => PosicaoModule),
+    forwardRef(() => UsuarioModule),
+    forwardRef(() => TransacaoModule),
   ],
   controllers: [CarteiraController],
   providers: [CarteiraService],
-  exports: [CarteiraService,
-  TypeOrmModule.forFeature([Carteira])]
+  exports: [
+    CarteiraService,
+    TypeOrmModule.forFeature([Carteira])]
 })
-export class CarteiraModule {}
+export class CarteiraModule { }

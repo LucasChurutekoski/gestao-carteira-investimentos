@@ -4,16 +4,16 @@ import { CreateTransacaoDto } from './dto/create-transacao.dto';
 import { UpdateTransacaoDto } from './dto/update-transacao.dto';
 import { AuthGuard } from '@nestjs/passport';
 
-@UseGuards(AuthGuard('jwt'))
-@Controller('transacao')
-export class TransacaoController {
-  constructor(private readonly transacaoService: TransacaoService) {}
+  @UseGuards(AuthGuard('jwt'))
+  @Controller('transacao')
+  export class TransacaoController {
+    constructor(private readonly transacaoService: TransacaoService) {}
 
-  @Post()
-  create(@Body() createTransacaoDto: CreateTransacaoDto, @Req()  req : any) {
-    const usuario = req.user
-    return this.transacaoService.realizarUmaTransacao(createTransacaoDto, usuario);
-  }
+    @Post()
+    create(@Body() createTransacaoDto: CreateTransacaoDto, @Req()  req : any) {
+      const usuario = req.user
+      return this.transacaoService.realizarUmaTransacao(createTransacaoDto, usuario);
+    }
 
   @Get()
   findAll() {

@@ -1,27 +1,16 @@
 Fazer
 {
-    
-    Serviço de Busca de Ativos
-    Salvar ativos no banco de dados
     Atualizar preço dos ativos a cada 15/30 minutos
 
 }
 
 Em Progresso 
 {
-    Criação de uma transação
-        salvar a transação
-        atualizar valores de preco médio, e valor total da carteira
-
-    Revisão controllers e services das entidades
-
-
+   Implementação de criptoAtivos
 }
 
 Revisar 
 {
-    
-    
 
 }
 
@@ -33,4 +22,12 @@ Concluido
     Entidade Posição
     Entidade Usuario
     Relações de Carteira com posição e Transação
+    
+    Criação de uma transação
+        salvar a transação
+        atualizar valores de preco médio, e valor total da carteira
+        atualizar valores da transação
+
+    Serviço de Busca de Ativos
+    Salvar ativos no banco de dados
 }

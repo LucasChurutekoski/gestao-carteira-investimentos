@@ -1,18 +1,22 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TransacaoService } from './transacao.service';
 import { TransacaoController } from './transacao.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transacao } from './entities/transacao.entity';
 import { CarteiraModule } from 'src/carteira/carteira.module';
 import { AtivoModule } from 'src/ativo/ativo.module';
+import { PosicaoModule } from 'src/posicao/posicao.module';
 
 
 @Module({
-  imports : [
+  imports: [
     TypeOrmModule.forFeature([Transacao]),
-    CarteiraModule, AtivoModule
+    forwardRef(() => AtivoModule),
+    forwardRef(() => PosicaoModule),
+    forwardRef(() => CarteiraModule)
   ],
   controllers: [TransacaoController],
   providers: [TransacaoService],
+  exports: [TransacaoService, TypeOrmModule.forFeature([Transacao])],
 })
-export class TransacaoModule {}
+export class TransacaoModule { }

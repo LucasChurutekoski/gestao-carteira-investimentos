@@ -1,5 +1,6 @@
+import { Ativo } from "src/ativo/entities/ativo.entity";
 import { Carteira } from "src/carteira/entities/carteira.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('posicoes')
 export class Posicao {
@@ -16,4 +17,7 @@ export class Posicao {
 
     @ManyToOne(() => Carteira, (carteira) => carteira.posicoes)
     carteira : Carteira
+
+    @ManyToOne(() => Ativo, (ativo) => ativo.posicoes)
+    ativo : Ativo
 }

@@ -10,7 +10,7 @@ export class Carteira {
     @Column({name : "valor_total_investido", type : "decimal", precision : 10, scale : 2, nullable : true})
     valorTotalInvestido : number
     @Column({name  : "valor_atual", type : "decimal", precision : 10, scale : 2, nullable : true})
-    valor_atual : number
+    valorAtual : number
 
     @OneToOne(()=> Usuario, (usuario) =>  usuario.carteira)
     @JoinColumn()

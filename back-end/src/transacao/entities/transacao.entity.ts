@@ -1,13 +1,14 @@
 import { Ativo } from "src/ativo/entities/ativo.entity";
 import { Carteira } from "src/carteira/entities/carteira.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { enumTipoTransacao } from "../enuns/enumTipoTransacao";
 
 @Entity('transacoes')
 export class Transacao {
     @PrimaryGeneratedColumn('uuid', {name : "id_transacao"})
     idTransacao : string
-    @Column({name :'tipo'})
-    tipo : string
+    @Column({name :'tipo_transacao', enum : enumTipoTransacao})
+    tipoTransacao : enumTipoTransacao
     @Column({name : "quantidade", type : "integer"})
     quantidade : number
     @Column({name : "preco_unitario", type : "decimal", precision : 2})

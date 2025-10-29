@@ -7,12 +7,15 @@ import { CarteiraModule } from 'src/carteira/carteira.module';
 
 
 @Module({
-  imports : [
+  imports: [
     TypeOrmModule.forFeature([Usuario]),
     CarteiraModule
   ],
   controllers: [UsuarioController],
   providers: [UsuarioService],
-  exports : [UsuarioService]
+  exports: [
+    UsuarioService,
+    TypeOrmModule.forFeature([Usuario])
+  ]
 })
-export class UsuarioModule {}
+export class UsuarioModule { }

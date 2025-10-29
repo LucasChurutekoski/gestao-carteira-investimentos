@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreatePosicaoDto } from './dto/create-posicao.dto';
 import { UpdatePosicaoDto } from './dto/update-posicao.dto';
 import { Posicao } from './entities/posicao.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Transacao } from 'src/transacao/entities/transacao.entity';
 import { Ativo } from 'src/ativo/entities/ativo.entity';
+import { enumTipoTransacao } from 'src/transacao/enuns/enumTipoTransacao';
 
 @Injectable()
 export class PosicaoService {
@@ -18,29 +19,54 @@ export class PosicaoService {
     private readonly ativoRepository: Repository<Ativo>,
   ) { }
 
-  async recalcularPosicao(carteiraId: string, ativoId: string) {
-    const transacoes = await this.transacaoRepository.find({
+  async recalcularPosicao(manager: EntityManager, carteiraId: string, ativoId: string) {
+    const transacoes = await manager.find(Transacao, {
       where: {
         carteira: { idCarteira: carteiraId },
         ativo: { idAtivo: ativoId },
       },
     });
-    const ativo = await this.ativoRepository.findOneBy({ idAtivo: ativoId });
+    const ativo = await manager.findOneBy(Ativo, { idAtivo: ativoId });
     if (!ativo) return;
 
     let totalQuantidade = 0
     let totalCusto = 0
 
-    for(const transacao of transacoes) {
-      if(transacao.tipo === 'compra'){
+    for (const transacao of transacoes) {
+      if (transacao.tipoTransacao === enumTipoTransacao.compra) {
         totalQuantidade += transacao.quantidade
-        totalCusto += transacao.quantidade  * Number(transacao.precoUnitario)
+        totalCusto += transacao.quantidade * Number(transacao.precoUnitario)
       }
-      else{
+      else if (transacao.tipoTransacao === enumTipoTransacao.venda) {
         totalQuantidade -= transacao.quantidade
       }
     }
+    if (totalQuantidade < 0) {
+      throw new BadRequestException(`Quantidade insuficiente do ativo : ${ativo} para realizar venda`)
+    }
+    const precoMedio = totalQuantidade > 0 ? totalCusto / totalQuantidade : 0
+    const valorTotalInvestido = totalQuantidade * precoMedio
+    const valorAtual = totalQuantidade * Number(ativo.precoAtual)
 
+    let posicao = await this.posicaoRepository.findOne({
+      where: {
+        carteira: { idCarteira: carteiraId },
+        ativo: { idAtivo: ativoId },
+      },
+      relations: ['carteira', 'ativo']
+    })
+    if (!posicao) {
+      posicao = this.posicaoRepository.create({
+        carteira: { idCarteira: carteiraId },
+        ativo: { idAtivo: ativoId }
+      })
+    }
+    posicao.quantidade = totalQuantidade
+    posicao.precoMedio = precoMedio,
+      posicao.valorTotalInvestido = valorTotalInvestido
+    posicao.valorAtual = valorAtual
+
+    await manager.save(posicao)
   }
 
 

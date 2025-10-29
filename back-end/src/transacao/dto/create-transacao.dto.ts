@@ -1,8 +1,10 @@
-import { IsInt, IsNotEmpty, IsNumber } from "class-validator";
+import { IsEnum, IsInt, IsNotEmpty, IsNumber } from "class-validator";
+import { enumTipoTransacao } from "../enuns/enumTipoTransacao";
 
 export class CreateTransacaoDto {
-    @IsNotEmpty({message : "Tipo da transação, compra ou venda é obrigatório"})
-    tipo : string
+    @IsEnum(enumTipoTransacao)
+    @IsNotEmpty({message : "tipoTransacao deve ser 'compra' ou 'venda'"})
+    tipoTransacao : enumTipoTransacao
     @IsInt({message : "quantidade do ativo deve ser um número"})
     quantidade : number
     @IsNumber()
