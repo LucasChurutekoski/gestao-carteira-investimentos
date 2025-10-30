@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreatePosicaoDto } from './dto/create-posicao.dto';
-import { UpdatePosicaoDto } from './dto/update-posicao.dto';
+
 import { Posicao } from './entities/posicao.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
@@ -31,62 +30,53 @@ export class PosicaoService {
 
     let totalQuantidade = 0.0
     let totalCusto = 0.0
+    let totalQuantidadeComprada = 0.0
 
     for (const transacao of transacoes) {
+      const quantidadeNumerica = Number(transacao.quantidade);
+      const precoUnitarioNumerico = Number(transacao.precoUnitario);
+
       if (transacao.tipoTransacao === enumTipoTransacao.compra) {
-        totalQuantidade += Number(transacao.quantidade)
-        totalCusto += Number(transacao.quantidade) * Number(transacao.precoUnitario)
+        totalQuantidade += quantidadeNumerica
+        totalCusto += quantidadeNumerica * precoUnitarioNumerico
+        totalQuantidadeComprada += quantidadeNumerica
       }
       else if (transacao.tipoTransacao === enumTipoTransacao.venda) {
-        totalQuantidade -= transacao.quantidade
+        totalQuantidade -= quantidadeNumerica
       }
     }
     if (totalQuantidade < 0) {
-      throw new BadRequestException(`Quantidade insuficiente do ativo : ${ativo} para realizar venda`)
+      throw new BadRequestException(`Quantidade insuficiente do ativo : ${ativo.ticker} para realizar venda`)
     }
-    const precoMedio = totalQuantidade > 0 ? totalCusto / totalQuantidade : 0
-    const valorTotalInvestido = totalQuantidade * precoMedio
-    const valorAtual = totalQuantidade * Number(ativo.precoAtual)
 
-    let posicao = await this.posicaoRepository.findOne({
+    let posicao = await manager.findOne(Posicao, {
       where: {
         carteira: { idCarteira: carteiraId },
         ativo: { idAtivo: ativoId },
-      },
-      relations: ['carteira', 'ativo']
+      }
     })
-    if (!posicao) {
-      posicao = this.posicaoRepository.create({
-        carteira: { idCarteira: carteiraId },
-        ativo: { idAtivo: ativoId }
-      })
+    if (totalQuantidade <= 0) {
+      if (posicao) {
+        await manager.remove(posicao)
+      }
     }
-    posicao.quantidade = totalQuantidade
-    posicao.precoMedio = precoMedio,
-      posicao.valorTotalInvestido = valorTotalInvestido
-    posicao.valorAtual = valorAtual
+    else {
+      const precoMedio = (totalQuantidadeComprada > 0) ? (totalCusto / totalQuantidadeComprada) : 0
+      const valorTotalInvestido = totalQuantidade * precoMedio
+      const valorAtual = totalQuantidade * Number(ativo.precoAtual)
+      if (!posicao) {
+        posicao = this.posicaoRepository.create({
+          carteira: { idCarteira: carteiraId },
+          ativo: { idAtivo: ativoId }
+        })
+      }
+      posicao.quantidade = totalQuantidade
+      posicao.precoMedio = precoMedio,
+        posicao.valorTotalInvestido = valorTotalInvestido
+      posicao.valorAtual = valorAtual
+    }
 
     await manager.save(posicao)
   }
 
-
-  create(createPosicaoDto: CreatePosicaoDto) {
-    return 'This action adds a new posicao';
-  }
-
-  findAll() {
-    return `This action returns all posicao`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} posicao`;
-  }
-
-  update(id: number, updatePosicaoDto: UpdatePosicaoDto) {
-    return `This action updates a #${id} posicao`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} posicao`;
-  }
 }

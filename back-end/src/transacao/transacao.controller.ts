@@ -1,37 +1,42 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { TransacaoService } from './transacao.service';
+
+import { AuthGuard } from '@nestjs/passport';
 import { CreateTransacaoDto } from './dto/create-transacao.dto';
 import { UpdateTransacaoDto } from './dto/update-transacao.dto';
-import { AuthGuard } from '@nestjs/passport';
 
-  @UseGuards(AuthGuard('jwt'))
-  @Controller('transacao')
-  export class TransacaoController {
-    constructor(private readonly transacaoService: TransacaoService) {}
+@UseGuards(AuthGuard('jwt'))
+@Controller('transacao')
+export class TransacaoController {
+  constructor(private readonly transacaoService: TransacaoService) { }
 
-    @Post()
-    create(@Body() createTransacaoDto: CreateTransacaoDto, @Req()  req : any) {
-      const usuario = req.user
-      return this.transacaoService.realizarUmaTransacao(createTransacaoDto, usuario);
-    }
+  @Post()
+  create(@Body() createTransacaoDto: CreateTransacaoDto, @Req() req: any) {
+    const usuario = req.user
+    return this.transacaoService.realizarUmaTransacao(createTransacaoDto, usuario);
+  }
 
   @Get()
-  findAll() {
-    return this.transacaoService.findAll();
+  find(@Req() req: any) {
+    const usuario = req.user
+    return this.transacaoService.buscarTodasTransacoes(usuario);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transacaoService.findOne(+id);
+  findOne(@Req() req: any, @Param('id') id: string) {
+    const usuario = req.user
+    return this.transacaoService.buscarTransacaoPeloId(usuario, id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTransacaoDto: UpdateTransacaoDto) {
-    return this.transacaoService.update(+id, updateTransacaoDto);
+  update(@Req() req: any, @Param('id') id: string, @Body() updateTransacaoDto: UpdateTransacaoDto){
+    const usuario = req.user
+    return this.transacaoService.editaTransacaoPeloId(usuario, id, updateTransacaoDto)
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transacaoService.remove(+id);
+  delete(@Req() req: any, @Param('id') id: string){
+    const usuario = req.user
+    return this.transacaoService.excluirTransacaoPeloId(usuario, id)
   }
 }

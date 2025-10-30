@@ -8,19 +8,24 @@ Fazer
         // O App calcula o preço unitário!
         const precoUnitario = valorTotalGasto / quantidade; 
         // precoUnitario = 595557.14...
-    }
+    }    
+    
     Atualizar preço dos ativos a cada 15/30 minutos
 
 }
 
 Em Progresso 
 {
-   Implementação de criptoAtivos
+   
+   
 }
 
 Revisar 
 {
+    
 
+    Implementação de criptoAtivos
+    
 }
 
 Concluido
@@ -39,4 +44,10 @@ Concluido
 
     Serviço de Busca de Ativos
     Salvar ativos no banco de dados
+
+    (BUG) na hora da venda parcial de um ativo, o preço médio sobe ok
+
+    Buscar uma transação pelo id
+    Editar uma transação pelo id
+    excluir uma transação pelo id
 }
