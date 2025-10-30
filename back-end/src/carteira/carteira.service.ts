@@ -14,6 +14,7 @@ export class CarteiraService {
   
   async buscarCarteira(usuario) {
     const carteira = await this.carteiraRepository.findOne({where : { usuario : usuario.sub}, relations : ['posicoes', 'posicoes.ativo']})
+    this.recalcularTotaisCarteira(manager, usuario.carteira.idCarteira)
     return carteira;
   }
 
