@@ -12,6 +12,9 @@ Fazer
     
     Atualizar preço dos ativos a cada 15/30 minutos
 
+    Refatorar Get Carteira para calcular as posições e calcular a carteira
+    Refatorar Post transações para somente salvar uma transação
+    Criar o Worker que vai atualizar o banco de tempo em tempo
 }
 
 Em Progresso 
@@ -22,10 +25,7 @@ Em Progresso
 
 Revisar 
 {
-    
-
     Implementação de criptoAtivos
-    
 }
 
 Concluido
@@ -47,6 +47,8 @@ Concluido
 
     (BUG) na hora da venda parcial de um ativo, o preço médio sobe ok
 
+    Buscar todas transações
+    Criar uma transação (compra e venda)
     Buscar uma transação pelo id
     Editar uma transação pelo id
     excluir uma transação pelo id

@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { TransacaoService } from './transacao.service';
-
 import { AuthGuard } from '@nestjs/passport';
 import { CreateTransacaoDto } from './dto/create-transacao.dto';
 import { UpdateTransacaoDto } from './dto/update-transacao.dto';
@@ -29,13 +28,13 @@ export class TransacaoController {
   }
 
   @Patch(':id')
-  update(@Req() req: any, @Param('id') id: string, @Body() updateTransacaoDto: UpdateTransacaoDto){
+  update(@Req() req: any, @Param('id') id: string, @Body() updateTransacaoDto: UpdateTransacaoDto) {
     const usuario = req.user
     return this.transacaoService.editaTransacaoPeloId(usuario, id, updateTransacaoDto)
   }
 
   @Delete(':id')
-  delete(@Req() req: any, @Param('id') id: string){
+  delete(@Req() req: any, @Param('id') id: string) {
     const usuario = req.user
     return this.transacaoService.excluirTransacaoPeloId(usuario, id)
   }
