@@ -1,20 +1,17 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateTransacaoDto } from './dto/create-transacao.dto';
-import { CarteiraService } from 'src/carteira/carteira.service';
 import { AtivoService } from 'src/ativo/ativo.service';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Transacao } from './entities/transacao.entity';
-import { PosicaoService } from 'src/posicao/posicao.service';
 import { UpdateTransacaoDto } from './dto/update-transacao.dto';
+import { enumTipoTransacao } from './enuns/enumTipoTransacao';
 
 
 @Injectable()
 export class TransacaoService {
   constructor(
-    private readonly carteiraService: CarteiraService,
     private readonly ativoService: AtivoService,
-    private readonly posicaoService: PosicaoService,
     @InjectRepository(Transacao) private transacaoRepository: Repository<Transacao>,
     @InjectDataSource() private readonly dataSource: DataSource
   ) { }
@@ -28,13 +25,29 @@ export class TransacaoService {
     try {
       const carteira = usuario.carteira
       const ativo = await this.ativoService.buscarOuCriarAtivo(createTransacaoDto.ticker)
-      const quantidade = createTransacaoDto.quantidade
 
-      if (ativo.tipoAtivo == 'acao') {
-        if (!Number.isInteger(createTransacaoDto.quantidade)) {
-          throw new BadRequestException("quantidade inválida para este tipo de ativo")
-        }
+      if (ativo.tipoAtivo == 'acao' && !Number.isInteger(createTransacaoDto.quantidade)) {
+        throw new BadRequestException("quantidade inválida para este tipo de ativo")
       }
+
+      const transacoesAnteriores = await queryRunner.manager.find(Transacao, {
+        where: { carteira: { idCarteira: carteira.idCarteira }, ativo: { idAtivo: ativo.idAtivo } }
+      })
+      let totalQuantidade = 0.0
+
+      for (const t of transacoesAnteriores) {
+        totalQuantidade += (t.tipoTransacao === enumTipoTransacao.compra) ? Number(t.quantidade) : -t.quantidade
+      }
+      if (createTransacaoDto.tipoTransacao === enumTipoTransacao.venda) {
+        totalQuantidade -= Number(createTransacaoDto.quantidade);
+      } else {
+        totalQuantidade += Number(createTransacaoDto.quantidade);
+      }
+
+      if (totalQuantidade < 0) {
+        throw new BadRequestException(`Saldo insuficiente para esta venda.`);
+      }
+
       const novaTransacao = this.transacaoRepository.create({
         quantidade: createTransacaoDto.quantidade,
         precoUnitario: createTransacaoDto.precoUnitario,
@@ -42,22 +55,18 @@ export class TransacaoService {
         tipoTransacao: createTransacaoDto.tipoTransacao,
         ativo: ativo,
         carteira: carteira
-      })
+      });
+      await queryRunner.manager.save(novaTransacao);
 
-      await queryRunner.manager.save(novaTransacao)
-
-      await this.posicaoService.recalcularPosicao(queryRunner.manager, carteira.idCarteira, ativo.idAtivo)
-      await this.carteiraService.recalcularTotaisCarteira(queryRunner.manager, carteira.idCarteira)
       await queryRunner.commitTransaction();
       return novaTransacao;
-    }
-    catch (error) {
-      await queryRunner.rollbackTransaction()
-      console.error(error)
-      throw new InternalServerErrorException("não foi possível realizar a transação")
-    }
-    finally {
-      await queryRunner.release()
+
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException("Não foi possível realizar a transação.");
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -93,7 +102,7 @@ export class TransacaoService {
           carteira: { idCarteira: usuario.carteira.idCarteira },
           idTransacao: id
         },
-        relations: ['ativo', 'carteira']
+        relations: ['ativo']
       })
       if (!transacao) {
         throw new NotFoundException("Transação não encontrada")
@@ -105,14 +114,30 @@ export class TransacaoService {
           throw new BadRequestException("Quantidade inválida para este tipo de ativo (ação)");
         }
       }
+      const transacoesAnteriores = await queryRunner.manager.find(Transacao, {
+        where: { carteira: { idCarteira: usuario.carteira.idCarteira }, ativo: { idAtivo: transacao.ativo.idAtivo } }
+      });
+
+      let saldoBase = 0.0;
+      for (const t of transacoesAnteriores) {
+        if (t.idTransacao === id) continue;
+        saldoBase += (t.tipoTransacao === enumTipoTransacao.compra) ? Number(t.quantidade) : -Number(t.quantidade);
+      }
+      let saldoFinal = saldoBase
+      if (transacao.tipoTransacao === enumTipoTransacao.compra) {
+        saldoFinal += Number(transacao.quantidade)
+      }
+      else {
+        saldoFinal -= Number(transacao.quantidade)
+      }
+      if (saldoFinal < 0) {
+        throw new BadRequestException("Exclusão inválida. Resultaria em saldo negativo.");
+      }
+
+      if (saldoFinal < 0) {
+        throw new BadRequestException("Exclusão inválida. Resultaria em saldo negativo.");
+      }
       await queryRunner.manager.save(transacao)
-
-      const carteiraId = usuario.carteira.idCarteira
-      const ativoId = transacao.ativo.idAtivo
-
-      await this.posicaoService.recalcularPosicao(queryRunner.manager, carteiraId, ativoId)
-
-      await this.carteiraService.recalcularTotaisCarteira(queryRunner.manager, carteiraId)
 
       await queryRunner.commitTransaction()
       return transacao
@@ -148,21 +173,29 @@ export class TransacaoService {
       if (!transacao) {
         throw new NotFoundException("Transação não encontrada")
       }
-      await queryRunner.manager.remove(transacao)
+      const transacoesAnteriores = await queryRunner.manager.find(Transacao, {
+        where: { carteira: { idCarteira: usuario.carteira.idCarteira }, ativo: { idAtivo: transacao.ativo.idAtivo } }
+      });
 
-      const carteiraId = usuario.carteira.idCarteira
-      const ativoId =  transacao.ativo.idAtivo
+      let saldoFinal = 0.0;
 
-      await this.posicaoService.recalcularPosicao(queryRunner.manager, carteiraId, ativoId)
-      await this.carteiraService.recalcularTotaisCarteira(queryRunner.manager, carteiraId)
+      for (const t of transacoesAnteriores) {
+        if (t.idTransacao === id) continue;
+        saldoFinal += (t.tipoTransacao === enumTipoTransacao.compra) ? Number(t.quantidade) : -Number(t.quantidade);
+      }
 
-      await queryRunner.commitTransaction()
+      if (saldoFinal < 0) {
+        throw new BadRequestException("Exclusão inválida. Resultaria em saldo negativo.");
+      }
+      await queryRunner.manager.remove(transacao);
+      await queryRunner.commitTransaction();
+      return { message: "Transação removida com sucesso." };
+
     } catch (error) {
-      await queryRunner.rollbackTransaction()
-      console.error(error)
-      throw error
-    }
-    finally {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException("Não foi possível remover a transação.");
+    } finally {
       await queryRunner.release();
     }
   }

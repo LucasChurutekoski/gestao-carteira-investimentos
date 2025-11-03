@@ -5,14 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transacao } from './entities/transacao.entity';
 import { CarteiraModule } from 'src/carteira/carteira.module';
 import { AtivoModule } from 'src/ativo/ativo.module';
-import { PosicaoModule } from 'src/posicao/posicao.module';
 
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transacao]),
     forwardRef(() => AtivoModule),
-    forwardRef(() => PosicaoModule),
     forwardRef(() => CarteiraModule)
   ],
   controllers: [TransacaoController],

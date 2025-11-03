@@ -9,10 +9,11 @@ import { CarteiraModule } from './carteira/carteira.module';
 import { AtivoModule } from './ativo/ativo.module';
 import { HttpModule } from '@nestjs/axios';
 import { TransacaoModule } from './transacao/transacao.module';
-import { PosicaoModule } from './posicao/posicao.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     HttpModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -29,8 +30,8 @@ import { PosicaoModule } from './posicao/posicao.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
-        autoLoadEntities : true,
-        synchronize : true  
+        autoLoadEntities: true,
+        synchronize: true
       })
     }),
     UsuarioModule,
@@ -38,10 +39,9 @@ import { PosicaoModule } from './posicao/posicao.module';
     CarteiraModule,
     AtivoModule,
     TransacaoModule,
-    PosicaoModule
   ],
   controllers: [AppController],
   providers: [AppService],
-  exports : [UsuarioModule]
+  exports: [UsuarioModule]
 })
 export class AppModule { }
