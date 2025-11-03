@@ -66,7 +66,7 @@ export class AtivoService {
     }
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_30_MINUTES_BETWEEN_9AM_AND_5PM)
   async atualizarPrecosWorker() {
     this.logger.log("Worker : Iniciando a atualização de preços")
 
