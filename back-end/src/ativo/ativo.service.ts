@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Ativo } from './entities/ativo.entity';
 import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { delay, firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -86,23 +86,28 @@ export class AtivoService {
   }
 
   private async atualizarAcoes(acoes: Ativo[]) {
-    try {
-      const tickers = acoes.map(a => a.ticker).join(',')
-      const token = this.configService.get<string>('TOKEN_BRAPI')
-      const urlAcao = `https://brapi.dev/api/quote/${tickers}?token=${token}`
+    this.logger.log("WORKER : inicio atualização de ações")
+    const token = this.configService.get<string>('TOKEN_BRAPI')
+    for (const acao of acoes) {
 
-      const response = await firstValueFrom(this.httpService.get(urlAcao))
-      const results = response.data.results
+      try {
+        const urlAcao = `https://brapi.dev/api/quote/${acao.ticker}?token=${token}`
 
-      for (const dados of results) {
-        await this.ativoRepository.update(
-          { ticker: dados.symbol.toLowerCase() },
-          { precoAtual: dados.regularMarketPrice }
-        )
-        this.logger.log(`O total de ${results.length} ativos foram atualizados`)
+        const response = await firstValueFrom(this.httpService.get(urlAcao))
+        const dados = response.data.results[0]
+
+        if (dados && dados.regularMarketPrice) {
+          await this.ativoRepository.update(
+            { ticker: acao.ticker },
+            { precoAtual: dados.regularMarketPrice }
+          );
+          this.logger.log(`WORKER: Ação ${acao.ticker} atualizada.`);
+        }
+
+        await delay(5000);
+      } catch (error) {
+        this.logger.log("WORKER: erro ao atualizar ações", error.message)
       }
-    } catch (error) {
-      this.logger.log("WORKER: erro ao atualizar ações", error.message)
     }
   }
 
