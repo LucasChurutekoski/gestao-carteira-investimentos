@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from './screens/Login';
 import HomeScreen from './screens/Home';
-import CriarConta from './screens/criarConta';
+import CriarConta from './screens/CriarConta';
 
 const Stack = createNativeStackNavigator()
 
@@ -31,6 +31,14 @@ function RootStack() {
         component={CriarConta}
         options={{
           title : "Criar Conta"
+        }}
+      />
+      <Stack.Screen
+        name='novaTransacaoModal'
+        component={TransacaoModal}
+        options={{
+          title : "Realizar uma transação",
+          presentation : "modal"
         }}
       />
     </Stack.Navigator>
