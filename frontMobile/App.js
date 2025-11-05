@@ -1,43 +1,49 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Home from './screens/Home';
-
-import { Feather } from '@expo/vector-icons';
-import { createStackNavigator } from '@react-navigation/stack';
+import * as React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import Login from './screens/Login';
+import LoginScreen from './screens/Login';
+import HomeScreen from './screens/Home';
+import CriarConta from './screens/criarConta';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator()
+
+function RootStack() {
+  return (
+    <Stack.Navigator initialRouteName="Login">
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          title: "tela de login"
+        }}
+      />
+      <Stack.Screen
+        name='Home'
+        component={HomeScreen}
+        options={{
+          title: 'Tela Inicial'
+        }}
+      />
+      <Stack.Screen
+        name='CriarConta'
+        component={CriarConta}
+        options={{
+          title : "Criar Conta"
+        }}
+      />
+    </Stack.Navigator>
+  )
+}
 
 
 export default function App() {
-  return(
+  return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Login"
-
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#004a9c',
-          },
-          headerTintColor : '#fff',
-          headerTitleStyle :{
-            fontWeight : 'bold'
-          },
-          headerTitleAlign : "center"
-        }}
-      >
-        <Stack.Screen 
-          name="Login" 
-          component={Login} 
-          options={{ headerShown: false }}
-        />
-
-      </Stack.Navigator>
-
+      <RootStack />
     </NavigationContainer>
+
   )
 }
 
