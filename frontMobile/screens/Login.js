@@ -15,6 +15,7 @@ export default function LoginScreen({ navigation }) {
 
             if (token) {
                 await SecureStorage.setItemAsync('token', token)
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 navigation.replace("Home")
             }
         } catch (error) {

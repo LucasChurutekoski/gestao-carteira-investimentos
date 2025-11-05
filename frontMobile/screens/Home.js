@@ -4,10 +4,12 @@ import { Text } from "react-native";
 import { useEffect, useState } from "react"
 import * as SecureStore from 'expo-secure-store'
 import { jwtDecode } from 'jwt-decode'
+import axios from 'axios'
 
 export default function Home() {
 
     const[usuario, setUsuario]= useState(null)
+    const[dadosProtegidos, setDadosProtegidos]=useState(null)
 
     useEffect(() => {
         const buscaToken = async () => {
@@ -16,11 +18,20 @@ export default function Home() {
                 if (token) {
                     const dadosToken = jwtDecode(token)
                     setUsuario(dadosToken)
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    const response = await axios.get('http:10.0.2.2:3000/carteira')
+                    setDadosProtegidos(response.data)       
                 }
             } catch (error) {
 
             }
-
+        }
+        const buscarCarteira = async () => {
+            try {
+                
+            } catch (error) {
+                
+            }
         }
         buscaToken()
     }, [])
