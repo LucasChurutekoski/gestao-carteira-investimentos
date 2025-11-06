@@ -1,5 +1,6 @@
+
 import { Transacao } from "src/transacao/entities/transacao.entity";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity("ativos")
 export class Ativo {
@@ -16,5 +17,6 @@ export class Ativo {
 
     @OneToMany(() => Transacao, (transacao) => transacao.ativo)
     transacoes: Transacao[];
+
 
 }

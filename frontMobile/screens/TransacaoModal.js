@@ -57,7 +57,7 @@ export default function TransacaoModal({ navigation }) {
                 Alert.alert("Erro", "Todos os campos são obrigatórios.");
                 return;
             }
-            console.log("Executou o salvamento")
+
             const precoFormatado = parseFloat(precoUnitario.replace(',', '.'))
             const quantidadeFormatada = parseFloat(quantidade.replace(',', '.'))
             const tipoFormatado = tipoOperacao.toLowerCase()
@@ -89,7 +89,6 @@ export default function TransacaoModal({ navigation }) {
 
         } catch (error) {
             const mensagem = error.response.data.message
-            console.log(mensagem)
             Alert.alert(
                 "Erro",
                 mensagem,
