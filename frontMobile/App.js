@@ -12,7 +12,7 @@ const Stack = createNativeStackNavigator()
 
 function RootStack() {
   return (
-    <Stack.Navigator initialRouteName="novaTransacaoModal">
+    <Stack.Navigator initialRouteName="Login">
       <Stack.Screen
         name="Login"
         component={LoginScreen}
