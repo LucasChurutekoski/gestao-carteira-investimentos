@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
             <TextInput placeholder="Digite seu email" onChangeText={setEmail}></TextInput>
 
             <Text>Senha</Text>
-            <TextInput type="password" placeholder="Digite sua senha" onChangeText={setSenha}></TextInput>
+            <TextInput secureTextEntry={true} placeholder="Digite sua senha" onChangeText={setSenha}></TextInput>
             <Button
                 title="Realizar Login"
                 onPress={handleLogin}
