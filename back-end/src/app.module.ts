@@ -11,6 +11,7 @@ import { HttpModule } from '@nestjs/axios';
 import { TransacaoModule } from './transacao/transacao.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HistoricoAtivosModule } from './historico-ativos/historico-ativos.module';
+import { HistoricoRentabilidadeModule } from './historico-rentabilidade/historico-rentabilidade.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { HistoricoAtivosModule } from './historico-ativos/historico-ativos.modul
     AtivoModule,
     TransacaoModule,
     HistoricoAtivosModule,
+    HistoricoRentabilidadeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
