@@ -1,4 +1,5 @@
 
+import { HistoricoAtivo } from "src/historico-ativos/entities/historico-ativo.entity";
 import { Transacao } from "src/transacao/entities/transacao.entity";
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -18,5 +19,7 @@ export class Ativo {
     @OneToMany(() => Transacao, (transacao) => transacao.ativo)
     transacoes: Transacao[];
 
+    @OneToMany(() => HistoricoAtivo, (historicoAtivo) => historicoAtivo.ativo)
+    historico : HistoricoAtivo[]
 
 }

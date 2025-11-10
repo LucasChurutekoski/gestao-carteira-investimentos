@@ -6,6 +6,10 @@ import { HttpService } from '@nestjs/axios';
 import { delay, firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import yahooFinance from 'yahoo-finance2'
+import YahooFinance from 'yahoo-finance2';
+import { HistoricoAtivo } from 'src/historico-ativos/entities/historico-ativo.entity';
+import moment from 'moment';
 
 
 @Injectable()
@@ -14,6 +18,7 @@ export class AtivoService {
 
   constructor(
     @InjectRepository(Ativo) private readonly ativoRepository: Repository<Ativo>,
+    @InjectRepository(HistoricoAtivo) private readonly historicoRepository: Repository<HistoricoAtivo>,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) { }
@@ -130,6 +135,67 @@ export class AtivoService {
       this.logger.log(`WORKER: criptoativos atualizados`)
     } catch (error) {
       this.logger.log("WORKER: Erro ao atualizar criptoativos", error.message)
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async buscarHistoricoAtivos() {
+    this.logger.log("Worker : Iniciando a atualização de preços históricos")
+
+    const todosAtivos = await this.ativoRepository.find()
+    if (todosAtivos.length === 0) return
+
+    const acoes = todosAtivos.filter(a => a.tipoAtivo === 'acao')
+    const criptos = todosAtivos.filter(c => c.tipoAtivo === 'cripto')
+
+    if (acoes.length > 0) {
+      for (const acao of acoes) {
+        const ticker = `${acao.ticker}.SA`
+        const dataInicioFixa = '2023-11-10';
+        const dataFim = new Date();
+
+        const ultimoPrecoSalvo = await this.historicoRepository.findOne({
+          where : { ativo : {idAtivo : acao.idAtivo}},
+          order : {data : "DESC"}
+        })
+
+        let dataInicio : string
+
+        if(ultimoPrecoSalvo){
+          dataInicio = moment(ultimoPrecoSalvo.data).add(1, 'day').format('YYYY-MM-DD')
+        }
+        else{
+          dataInicio = dataInicioFixa
+        }
+
+        const queryOptions = {
+          period1: dataInicio,
+          period2: dataFim,
+          interval: '1d',
+        } as const;
+
+        const yf = new YahooFinance()
+        const resultados = await yf.chart(ticker, queryOptions)
+        const dadosHistoricos = resultados.quotes
+
+        console.log(dadosHistoricos)
+        const batchSalvar: HistoricoAtivo[] = dadosHistoricos
+          .filter(dia => dia.adjclose != null)
+          .map(dia => {
+            return this.historicoRepository.create({
+              ativo: acao,
+              data: dia.date,
+              precoFechamento: dia.adjclose as number
+            })
+          })
+        await this.historicoRepository.save(batchSalvar)
+      }
+    }
+
+    if (criptos.length > 0) {
+      for(const cripto of criptos){
+        const ticker = `${cripto.ticker}`
+      }
     }
   }
 }

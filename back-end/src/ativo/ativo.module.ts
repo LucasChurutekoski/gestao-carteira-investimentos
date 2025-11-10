@@ -5,12 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Ativo } from './entities/ativo.entity';
 import { HttpModule } from '@nestjs/axios';
 import { TransacaoModule } from 'src/transacao/transacao.module';
+import { HistoricoAtivosModule } from 'src/historico-ativos/historico-ativos.module';
+import { HistoricoAtivo } from 'src/historico-ativos/entities/historico-ativo.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Ativo]),
+    TypeOrmModule.forFeature([Ativo, HistoricoAtivo]),
     HttpModule,
-    forwardRef(() => TransacaoModule),
+    forwardRef(() => TransacaoModule)
   ],
   controllers: [AtivoController],
   providers: [AtivoService],

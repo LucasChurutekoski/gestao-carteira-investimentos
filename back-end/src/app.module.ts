@@ -10,6 +10,7 @@ import { AtivoModule } from './ativo/ativo.module';
 import { HttpModule } from '@nestjs/axios';
 import { TransacaoModule } from './transacao/transacao.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { HistoricoAtivosModule } from './historico-ativos/historico-ativos.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CarteiraModule,
     AtivoModule,
     TransacaoModule,
+    HistoricoAtivosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
