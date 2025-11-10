@@ -155,16 +155,16 @@ export class AtivoService {
         const dataFim = new Date();
 
         const ultimoPrecoSalvo = await this.historicoRepository.findOne({
-          where : { ativo : {idAtivo : acao.idAtivo}},
-          order : {data : "DESC"}
+          where: { ativo: { idAtivo: acao.idAtivo } },
+          order: { data: "DESC" }
         })
 
-        let dataInicio : string
+        let dataInicio: string
 
-        if(ultimoPrecoSalvo){
+        if (ultimoPrecoSalvo) {
           dataInicio = moment(ultimoPrecoSalvo.data).add(1, 'day').format('YYYY-MM-DD')
         }
-        else{
+        else {
           dataInicio = dataInicioFixa
         }
 
@@ -178,7 +178,6 @@ export class AtivoService {
         const resultados = await yf.chart(ticker, queryOptions)
         const dadosHistoricos = resultados.quotes
 
-        console.log(dadosHistoricos)
         const batchSalvar: HistoricoAtivo[] = dadosHistoricos
           .filter(dia => dia.adjclose != null)
           .map(dia => {
@@ -193,8 +192,57 @@ export class AtivoService {
     }
 
     if (criptos.length > 0) {
-      for(const cripto of criptos){
-        const ticker = `${cripto.ticker}`
+      for (const cripto of criptos) {
+        const mapaCriptoParaTicker = {
+          'Bitcoin': 'BTC',
+          'Ethereum': 'ETH',
+          'Cardano': 'ADA',
+        };
+        const ticker = mapaCriptoParaTicker[cripto.ticker]
+        if (!ticker) {
+          continue
+        }
+        const tickerFormatado = `${ticker}-BRL`
+        const dataInicioFixa = '2023-11-10'
+        const dataFim = new Date()
+
+        const ultimoPrecoSalvo = await this.historicoRepository.findOne({
+          where: {
+            ativo: { idAtivo: cripto.idAtivo }
+          },
+          order: { data: "DESC" }
+        })
+
+        let dataInicio: string
+
+        if (ultimoPrecoSalvo) {
+          dataInicio = moment(ultimoPrecoSalvo.data).add(1, 'day').format("YYYY-MM-DD")
+        }
+        else {
+          dataInicio = dataInicioFixa
+        }
+
+        const queryOptions = {
+          period1: dataInicio,
+          period2: dataFim,
+          interval: '1d'
+        } as const
+
+        const yf = new yahooFinance()
+
+        const resposta = await yf.chart(tickerFormatado, queryOptions)
+        const dadosHistoricos = resposta.quotes
+
+        const batchSalvar: HistoricoAtivo[] = dadosHistoricos
+          .filter(dia => dia.adjclose != null)
+          .map(dia => {
+            return this.historicoRepository.create({
+              ativo: cripto,
+              data: dia.date,
+              precoFechamento: dia.adjclose as number
+            })
+          })
+        await this.historicoRepository.save(batchSalvar)
       }
     }
   }
