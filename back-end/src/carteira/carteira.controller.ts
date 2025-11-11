@@ -15,4 +15,10 @@ export class CarteiraController {
     const usuario = req.user
     return this.carteiraService.buscarCarteira(usuario);
   }
+
+  @Get('/rentabilidade')
+  findHistorico(@Req() req : any){
+    const usuario = req.user
+    return this.carteiraService.buscarHistoricoRentabilidade(usuario)
+  }
 }

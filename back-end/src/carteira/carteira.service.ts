@@ -7,12 +7,14 @@ import { Transacao } from 'src/transacao/entities/transacao.entity';
 import { Ativo } from 'src/ativo/entities/ativo.entity';
 import { enumTipoTransacao } from 'src/transacao/enuns/enumTipoTransacao';
 import { PosicaoCalculada } from './dto/retorno-carteira.dto';
+import { HistoricoRentabilidade } from 'src/historico-rentabilidade/entities/historico-rentabilidade.entity';
 
 @Injectable()
 export class CarteiraService {
   constructor(
     @InjectRepository(Carteira) private readonly carteiraRepository: Repository<Carteira>,
-    @InjectRepository(Transacao) private readonly transacaoRepository: Repository<Transacao>
+    @InjectRepository(Transacao) private readonly transacaoRepository: Repository<Transacao>,
+    @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository : Repository<HistoricoRentabilidade>
 
   ) { }
 
@@ -83,6 +85,19 @@ export class CarteiraService {
       rentabilidadeGeral: rentabilidadeGeral,
       posicoes: posicoesFinais,
     };
+  }
+
+  async buscarHistoricoRentabilidade(usuario){
+    const historico = await this.historicoRentabilidadeRepository.find({
+      where : { carteira : {idCarteira : usuario.carteira.idCarteira}},
+      order : {data : "ASC"}
+    })
+
+    return historico.map(ponto => ({
+      data : ponto.data,
+      valorAtual : ponto.valorTotal,
+      rentabilidade : (ponto.valorTotalInvestido > 0) ? (ponto.valorTotal / ponto.valorTotalInvestido) -1 : 0
+    }))
   }
 
 }

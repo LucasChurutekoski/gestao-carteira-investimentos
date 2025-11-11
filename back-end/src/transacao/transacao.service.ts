@@ -51,7 +51,7 @@ export class TransacaoService {
       const novaTransacao = this.transacaoRepository.create({
         quantidade: createTransacaoDto.quantidade,
         precoUnitario: createTransacaoDto.precoUnitario,
-        dataCompra: createTransacaoDto.dataCompra,
+        dataTransacao: createTransacaoDto.dataCompra,
         tipoTransacao: createTransacaoDto.tipoTransacao,
         ativo: ativo,
         carteira: carteira

@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsNumber } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber } from "class-validator";
 import { enumTipoTransacao } from "../enuns/enumTipoTransacao";
 
 export class CreateTransacaoDto {

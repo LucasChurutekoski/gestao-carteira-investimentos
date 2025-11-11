@@ -14,7 +14,7 @@ export class Transacao {
     @Column({ name: "preco_unitario", type: "decimal", precision: 10, scale : 2 })
     precoUnitario: number
     @Column({ name: "data_compra", type: 'timestamp' })
-    dataCompra: Date
+    dataTransacao: Date
 
     @ManyToOne(() => Carteira, (carteira) => carteira.transacoes, {
         onDelete: 'CASCADE'
