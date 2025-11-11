@@ -1,16 +1,17 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "../components/header";
-import { Button, Text } from "react-native";
+import { Button, Text, View } from "react-native";
 import { useEffect, useState } from "react"
 import * as SecureStore from 'expo-secure-store'
 import { jwtDecode } from 'jwt-decode'
 import axios from 'axios'
 import MenuBottom from "../components/MenuBottom";
+import GraficoRentabilidade from "../components/GraficoRentabilidade";
 
-export default function Home({navigation}) {
+export default function Home({ navigation }) {
 
-    const[usuario, setUsuario]= useState(null)
-    const[dadosProtegidos, setDadosProtegidos]=useState(null)
+    const [usuario, setUsuario] = useState(null)
+    const [dadosProtegidos, setDadosProtegidos] = useState(null)
 
     useEffect(() => {
         const buscaToken = async () => {
@@ -21,7 +22,7 @@ export default function Home({navigation}) {
                     setUsuario(dadosToken)
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     const response = await axios.get('http:10.0.2.2:3000/carteira')
-                    setDadosProtegidos(response.data)       
+                    setDadosProtegidos(response.data)
                 }
             } catch (error) {
 
@@ -30,22 +31,28 @@ export default function Home({navigation}) {
         buscaToken()
     }, [])
 
-    function abrirModalTransacao(){
+    function abrirModalTransacao() {
         navigation.navigate("novaTransacaoModal")
     }
     return (
         <SafeAreaView>
             <Header />
-            {usuario ? (<Text>Bem-vindo(a), {usuario.nomeUsuario}!</Text>) : (
-                <Text>Carregando dados...</Text>
-            )   }
+            {usuario ?
+                (
+                    <View>
+                        <Text>Bem-vindo(a), {usuario.nomeUsuario}!</Text>
+                        <GraficoRentabilidade />
+                    </View>
+                ) : (
+                    <Text>Carregando dados...</Text>
+                )}
 
             <Button
                 title="+"
                 onPress={abrirModalTransacao}
-                
+
             />
-            <MenuBottom/>
+            <MenuBottom />
         </SafeAreaView>
     )
 }

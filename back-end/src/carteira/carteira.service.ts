@@ -95,8 +95,8 @@ export class CarteiraService {
 
     return historico.map(ponto => ({
       data : ponto.data,
-      valorAtual : ponto.valorTotal,
-      rentabilidade : (ponto.valorTotalInvestido > 0) ? (ponto.valorTotal / ponto.valorTotalInvestido) -1 : 0
+      valorAtual : ponto.valorTotalAtual,
+      rentabilidade : (ponto.valorTotalInvestido > 0) ? (ponto.valorTotalAtual / ponto.valorTotalInvestido) -1 : 0
     }))
   }
 

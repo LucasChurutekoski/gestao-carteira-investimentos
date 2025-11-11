@@ -14,7 +14,7 @@ export class HistoricoRentabilidade {
     valorTotalInvestido : number
 
     @Column({name : 'valor_total_atual', type : 'decimal', precision : 10, scale : 2})
-    valorTotal : number
+    valorTotalAtual : number
 
     @Column({name : "rentabilidade_atual", type :'decimal', precision : 10, scale : 2})
     rentabilidadeAcumulada : number

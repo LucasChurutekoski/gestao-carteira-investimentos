@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Carteira } from 'src/carteira/entities/carteira.entity';
 import { Transacao } from 'src/transacao/entities/transacao.entity';
@@ -12,6 +12,8 @@ import { HistoricoRentabilidade } from './entities/historico-rentabilidade.entit
 
 @Injectable()
 export class HistoricoRentabilidadeService {
+  private readonly logger = new Logger(HistoricoRentabilidadeService.name);
+
   constructor(
     @InjectRepository(Carteira) private readonly carteiraRepository: Repository<Carteira>,
     @InjectRepository(Transacao) private readonly transacaoRepository: Repository<Transacao>,
@@ -19,35 +21,55 @@ export class HistoricoRentabilidadeService {
     @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository : Repository<HistoricoRentabilidade>
   ) { }
 
-
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('5 2 * * *') 
   async calcularRentabilidadeHistorica() {
-    const carteiras = await this.carteiraRepository.find()
-    for (const carteiraDoLoop of carteiras) {
-      console.log("WORKER: CALCULANDO RENTABILIDADE DA CARTEIRA")
+    this.logger.log('WORKER DIÁRIO: Iniciando cálculo de rentabilidade...');
+    
+    const carteiras = await this.carteiraRepository.find();
 
-      const primeiraTransacao = await this.transacaoRepository.findOne({
-        where: {
-          carteira: { idCarteira: carteiraDoLoop.idCarteira }
-        },
-        order: { dataTransacao: "ASC" }
-      })
-      if (!primeiraTransacao) {
-        continue
+    for (const carteiraDoLoop of carteiras) {
+      this.logger.log(`Processando carteira: ${carteiraDoLoop.idCarteira}`);
+
+      let dataInicio: moment.Moment;
+      const ultimoSnapshot = await this.historicoRentabilidadeRepository.findOne({
+        where: { carteira: { idCarteira: carteiraDoLoop.idCarteira } },
+        order: { data: 'DESC' }
+      });
+
+      if (ultimoSnapshot) {
+        dataInicio = moment(ultimoSnapshot.data).add(1, 'day');
+        this.logger.log(`Último cálculo em: ${ultimoSnapshot.data}. Recalculando a partir de ${dataInicio.format('YYYY-MM-DD')}`);
+      } else {
+
+        const primeiraTransacao = await this.transacaoRepository.findOne({
+          where: { carteira: { idCarteira: carteiraDoLoop.idCarteira } },
+          order: { dataTransacao: "ASC" }
+        });
+
+        if (!primeiraTransacao) {
+          this.logger.log(`Carteira ${carteiraDoLoop.idCarteira} sem transações. Pulando.`);
+          continue;
+        }
+        dataInicio = moment(primeiraTransacao.dataTransacao);
+        this.logger.log(`Primeira vez. Calculando backfill a partir de ${dataInicio.format('YYYY-MM-DD')}`);
       }
-      const dataInicio = moment(primeiraTransacao.dataTransacao)
-      const dataFim = moment().subtract(1, 'day')
+      const dataFim = moment().subtract(1, 'day').startOf('day');
+      if (dataInicio.isAfter(dataFim)) {
+        this.logger.log(`Carteira ${carteiraDoLoop.idCarteira} já está atualizada. Pulando.`);
+        continue;
+      }
 
       for (let dia = dataInicio.clone(); dia.isSameOrBefore(dataFim); dia.add(1, 'day')) {
 
-        const dataSnapshot = dia.toDate()
+        const dataSnapshot = dia.toDate();
 
         const transacoesAteHoje = await this.transacaoRepository.find({
           where: {
             carteira: { idCarteira: carteiraDoLoop.idCarteira },
             dataTransacao: LessThanOrEqual(dataSnapshot)
           }, relations: ["ativo"]
-        })
+        });
+        
         const mapaPosicoes = new Map<string, {
           totalQtd: number,
           totalCusto: number,
@@ -57,62 +79,59 @@ export class HistoricoRentabilidadeService {
 
         for (const t of transacoesAteHoje) {
           const ativoId = t.ativo.idAtivo;
-          let pos = mapaPosicoes.get(ativoId)
-          if (!pos) {
+          let pos = mapaPosicoes.get(ativoId);
+          if (!pos) { 
             pos = { totalQtd: 0, totalCusto: 0, totalQtdComprada: 0, ativo: t.ativo };
             mapaPosicoes.set(ativoId, pos);
           }
-          if (!mapaPosicoes.has(ativoId)) {
-            mapaPosicoes.set(ativoId, { totalQtd: 0, totalCusto: 0, totalQtdComprada: 0, ativo: t.ativo })
-          }
-          const qtd = Number(t.quantidade)
-          const preco = Number(t.precoUnitario)
+          const qtd = Number(t.quantidade);
+          const preco = Number(t.precoUnitario);
 
           if (t.tipoTransacao === enumTipoTransacao.compra) {
             pos.totalQtd += qtd;
             pos.totalQtdComprada += qtd;
             pos.totalCusto += qtd * preco;
           } else {
-            pos.totalQtd -= qtd
+            pos.totalQtd -= qtd;
           }
         }
-        let totalCarteiraInvestido = 0.0
-        let totalCarteiraAtual = 0.0
+        
+        let totalCarteiraInvestido = 0.0;
+        let totalCarteiraAtual = 0.0;
 
         for (const [AtivoId, pos] of mapaPosicoes.entries()) {
           if (pos.totalQtd <= 0) {
-            continue
+            continue;
           }
+          
           const precoNoDia = await this.historicoAtivoRepository.findOne({
             where: {
               ativo: { idAtivo: AtivoId },
               data: dataSnapshot
             }
-          })
+          });
+          const precoAtualNoDia = precoNoDia ? Number(precoNoDia.precoFechamento) : 0;
 
-          const precoAtualNoDia = precoNoDia ? Number(precoNoDia.precoFechamento) : 0
+          const precoMedio = (pos.totalQtdComprada > 0) ? (pos.totalCusto / pos.totalQtdComprada) : 0;
+          const valorTotalInvestido = pos.totalQtd * precoMedio;
+          const valorAtual = pos.totalQtd * precoAtualNoDia;
 
-          const precoMedio = pos.totalCusto / pos.totalQtdComprada
-          const valorTotalInvestido = pos.totalQtd * precoMedio
-          const valorAtual = pos.totalQtd * precoAtualNoDia
-
-          totalCarteiraInvestido += valorTotalInvestido
-          totalCarteiraAtual +=valorAtual
+          totalCarteiraInvestido += valorTotalInvestido;
+          totalCarteiraAtual += valorAtual;
         }
 
-        const rentabilidadeDia = (totalCarteiraInvestido > 0) ? (totalCarteiraAtual / totalCarteiraInvestido) - 1 : 0
+        const rentabilidadeDia = (totalCarteiraInvestido > 0) ? (totalCarteiraAtual / totalCarteiraInvestido) - 1 : 0;
 
-        const snapshot = await this.historicoRentabilidadeRepository.create({
+        const snapshot = this.historicoRentabilidadeRepository.create({
           carteira : carteiraDoLoop,
           data : dataSnapshot,
           valorTotalInvestido : totalCarteiraInvestido,
-          valorTotal : totalCarteiraAtual,
+          valorTotalAtual : totalCarteiraAtual,
           rentabilidadeAcumulada : rentabilidadeDia
-        })
-        await this.historicoRentabilidadeRepository.save(snapshot)
+        });
+        await this.historicoRentabilidadeRepository.save(snapshot);
       }
     }
-    console.log("WORKER : Termino de calcular carteira")
-
+    this.logger.log("WORKER DIÁRIO: Termino de calcular carteira");
   }
 }
