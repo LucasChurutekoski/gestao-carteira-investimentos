@@ -28,11 +28,11 @@ export default function GraficoRentabilidade() {
                     
                     const rentabilidadePercentual = Number(ponto.rentabilidade) || 0
 
-                    const mostrarLabel = dadosDaApi.length > 10 && index % 2 === 0;
+                    const mostrarLabel = dadosDaApi.length > 10 && index % 5 === 0;
 
                     return {
                         value: rentabilidadePercentual,
-                        label: mostrarLabel ? moment(ponto.data).format('DD/MM') : null
+                        label: mostrarLabel ? moment(ponto.data).format('MM/DD') : null
                     }
                 });
 
@@ -66,8 +66,13 @@ export default function GraficoRentabilidade() {
                 <LineChart
                     data={dadosGrafico}
                     color="#007AFF"
-                    thickness={3}
+                    thickness={2}
                     curved
+                    spacing={1}
+                    initialSpacing={10}
+                    hideDataPoints={true}
+                    scrollToEnd={false}
+                    adjustToWidth={true}
                     yAxisTextStyle={{ color: 'gray' }}
                     xAxisLabelTextStyle={{ color: 'gray' }}
                     yAxisLabelSuffix="%"

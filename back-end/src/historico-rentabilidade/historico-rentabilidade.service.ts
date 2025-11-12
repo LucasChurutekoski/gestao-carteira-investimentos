@@ -64,7 +64,7 @@ export class HistoricoRentabilidadeService {
           continue
         }
 
-        const dataSnapshot = dia.toDate();
+        let dataSnapshot = dia.toDate();
 
         const transacoesAteHoje = await this.transacaoRepository.find({
           where: {
@@ -111,12 +111,22 @@ export class HistoricoRentabilidadeService {
             continue;
           }
           
-          const precoNoDia = await this.historicoAtivoRepository.findOne({
+          let precoNoDia = await this.historicoAtivoRepository.findOne({
             where: {
               ativo: { idAtivo: AtivoId },
               data: dataSnapshot
             }
           });
+          if(precoNoDia?.precoFechamento === 0){
+            let novaData = moment(dataSnapshot).subtract(1, 'day')
+            dataSnapshot = novaData.toDate()
+            precoNoDia = await this.historicoAtivoRepository.findOne({
+              where : {
+                ativo : { idAtivo : AtivoId},
+                data : dataSnapshot
+              }
+            })
+          }
           const precoAtualNoDia = precoNoDia ? Number(precoNoDia.precoFechamento) : 0;
 
           const precoMedio = (pos.totalQtdComprada > 0) ? (pos.totalCusto / pos.totalQtdComprada) : 0;
