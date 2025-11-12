@@ -28,7 +28,7 @@ export default function GraficoRentabilidade() {
                     
                     const rentabilidadePercentual = Number(ponto.rentabilidade) || 0
 
-                    const mostrarLabel = dadosDaApi.length > 10 && index % 5 === 0;
+                    const mostrarLabel = dadosDaApi.length > 10 && index % 2 === 0;
 
                     return {
                         value: rentabilidadePercentual,

@@ -21,7 +21,7 @@ export class HistoricoRentabilidadeService {
     @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository : Repository<HistoricoRentabilidade>
   ) { }
 
-  @Cron(CronExpression.EVERY_10_MINUTES) 
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT) 
   async calcularRentabilidadeHistorica() {
     this.logger.log('WORKER DIÁRIO: Iniciando cálculo de rentabilidade...');
     
