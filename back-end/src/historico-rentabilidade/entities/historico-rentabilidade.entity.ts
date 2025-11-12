@@ -19,6 +19,8 @@ export class HistoricoRentabilidade {
     @Column({name : "rentabilidade_atual", type :'decimal', precision : 10, scale : 2})
     rentabilidadeAcumulada : number
 
-    @ManyToOne(() => Carteira, (carteira) => carteira.historicoRentabilidade)
+    @ManyToOne(() => Carteira, (carteira) => carteira.historicoRentabilidade,{
+        onDelete : "CASCADE"
+    })
     carteira : Carteira
 }

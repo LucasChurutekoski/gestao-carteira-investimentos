@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Carteira } from 'src/carteira/entities/carteira.entity';
 import { Transacao } from 'src/transacao/entities/transacao.entity';
@@ -21,7 +21,7 @@ export class HistoricoRentabilidadeService {
     @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository : Repository<HistoricoRentabilidade>
   ) { }
 
-  @Cron('5 2 * * *') 
+  @Cron(CronExpression.EVERY_10_MINUTES) 
   async calcularRentabilidadeHistorica() {
     this.logger.log('WORKER DIÁRIO: Iniciando cálculo de rentabilidade...');
     
@@ -60,6 +60,9 @@ export class HistoricoRentabilidadeService {
       }
 
       for (let dia = dataInicio.clone(); dia.isSameOrBefore(dataFim); dia.add(1, 'day')) {
+        if(dia.day() === 0 || dia.day() === 6){
+          continue
+        }
 
         const dataSnapshot = dia.toDate();
 
@@ -92,7 +95,11 @@ export class HistoricoRentabilidadeService {
             pos.totalQtdComprada += qtd;
             pos.totalCusto += qtd * preco;
           } else {
-            pos.totalQtd -= qtd;
+            const qtdRemoverDaCompra = Math.min(qtd, pos.totalQtdComprada)
+            const custoMedioAntes = pos.totalQtdComprada > 0 ? (pos.totalCusto / pos.totalQtdComprada) : 0
+            pos.totalQtd -= qtd,
+            pos.totalQtdComprada -= qtdRemoverDaCompra
+            pos.totalCusto -= qtdRemoverDaCompra * custoMedioAntes
           }
         }
         
@@ -120,7 +127,7 @@ export class HistoricoRentabilidadeService {
           totalCarteiraAtual += valorAtual;
         }
 
-        const rentabilidadeDia = (totalCarteiraInvestido > 0) ? (totalCarteiraAtual / totalCarteiraInvestido) - 1 : 0;
+        const rentabilidadeDia = (totalCarteiraInvestido > 0) ? ((totalCarteiraAtual / totalCarteiraInvestido) - 1) * 100 : 0;
 
         const snapshot = this.historicoRentabilidadeRepository.create({
           carteira : carteiraDoLoop,
