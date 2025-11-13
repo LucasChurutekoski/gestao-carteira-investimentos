@@ -71,7 +71,7 @@ export class AtivoService {
     }
   }
 
-  @Cron(CronExpression.EVERY_30_MINUTES_BETWEEN_10AM_AND_7PM)
+  @Cron(CronExpression.EVERY_MINUTE)
   async atualizarPrecosWorker() {
     this.logger.log("Worker : Iniciando a atualização de preços")
 
@@ -138,7 +138,7 @@ export class AtivoService {
     }
   }
 
-  @Cron(CronExpression.EVERY_30_MINUTES_BETWEEN_10AM_AND_7PM)
+  @Cron(CronExpression.EVERY_MINUTE)
   async buscarHistoricoAtivos() {
     this.logger.log("Worker : Iniciando a atualização de preços históricos")
 

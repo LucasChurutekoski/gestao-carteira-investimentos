@@ -18,13 +18,13 @@ export class HistoricoRentabilidadeService {
     @InjectRepository(Carteira) private readonly carteiraRepository: Repository<Carteira>,
     @InjectRepository(Transacao) private readonly transacaoRepository: Repository<Transacao>,
     @InjectRepository(HistoricoAtivo) private readonly historicoAtivoRepository: Repository<HistoricoAtivo>,
-    @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository : Repository<HistoricoRentabilidade>
+    @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository: Repository<HistoricoRentabilidade>
   ) { }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT) 
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async calcularRentabilidadeHistorica() {
     this.logger.log('WORKER DIÁRIO: Iniciando cálculo de rentabilidade...');
-    
+
     const carteiras = await this.carteiraRepository.find();
 
     for (const carteiraDoLoop of carteiras) {
@@ -60,7 +60,7 @@ export class HistoricoRentabilidadeService {
       }
 
       for (let dia = dataInicio.clone(); dia.isSameOrBefore(dataFim); dia.add(1, 'day')) {
-        if(dia.day() === 0 || dia.day() === 6){
+        if (dia.day() === 0 || dia.day() === 6) {
           continue
         }
 
@@ -72,7 +72,7 @@ export class HistoricoRentabilidadeService {
             dataTransacao: LessThanOrEqual(dataSnapshot)
           }, relations: ["ativo"]
         });
-        
+
         const mapaPosicoes = new Map<string, {
           totalQtd: number,
           totalCusto: number,
@@ -83,7 +83,7 @@ export class HistoricoRentabilidadeService {
         for (const t of transacoesAteHoje) {
           const ativoId = t.ativo.idAtivo;
           let pos = mapaPosicoes.get(ativoId);
-          if (!pos) { 
+          if (!pos) {
             pos = { totalQtd: 0, totalCusto: 0, totalQtdComprada: 0, ativo: t.ativo };
             mapaPosicoes.set(ativoId, pos);
           }
@@ -98,11 +98,11 @@ export class HistoricoRentabilidadeService {
             const qtdRemoverDaCompra = Math.min(qtd, pos.totalQtdComprada)
             const custoMedioAntes = pos.totalQtdComprada > 0 ? (pos.totalCusto / pos.totalQtdComprada) : 0
             pos.totalQtd -= qtd,
-            pos.totalQtdComprada -= qtdRemoverDaCompra
+              pos.totalQtdComprada -= qtdRemoverDaCompra
             pos.totalCusto -= qtdRemoverDaCompra * custoMedioAntes
           }
         }
-        
+
         let totalCarteiraInvestido = 0.0;
         let totalCarteiraAtual = 0.0;
 
@@ -110,23 +110,25 @@ export class HistoricoRentabilidadeService {
           if (pos.totalQtd <= 0) {
             continue;
           }
-          
+
           let precoNoDia = await this.historicoAtivoRepository.findOne({
             where: {
               ativo: { idAtivo: AtivoId },
               data: dataSnapshot
             }
           });
-          if(precoNoDia?.precoFechamento === 0){
+          
+          while (precoNoDia?.precoFechamento == 0){
             let novaData = moment(dataSnapshot).subtract(1, 'day')
             dataSnapshot = novaData.toDate()
             precoNoDia = await this.historicoAtivoRepository.findOne({
-              where : {
-                ativo : { idAtivo : AtivoId},
-                data : dataSnapshot
+              where: {
+                ativo: { idAtivo: AtivoId},
+                data: dataSnapshot
               }
             })
           }
+
           const precoAtualNoDia = precoNoDia ? Number(precoNoDia.precoFechamento) : 0;
 
           const precoMedio = (pos.totalQtdComprada > 0) ? (pos.totalCusto / pos.totalQtdComprada) : 0;
@@ -139,12 +141,16 @@ export class HistoricoRentabilidadeService {
 
         const rentabilidadeDia = (totalCarteiraInvestido > 0) ? ((totalCarteiraAtual / totalCarteiraInvestido) - 1) * 100 : 0;
 
+        if(totalCarteiraAtual <= 0){
+          continue
+        }
+
         const snapshot = this.historicoRentabilidadeRepository.create({
-          carteira : carteiraDoLoop,
-          data : dataSnapshot,
-          valorTotalInvestido : totalCarteiraInvestido,
-          valorTotalAtual : totalCarteiraAtual,
-          rentabilidadeAcumulada : rentabilidadeDia
+          carteira: carteiraDoLoop,
+          data: dataSnapshot,
+          valorTotalInvestido: totalCarteiraInvestido,
+          valorTotalAtual: totalCarteiraAtual,
+          rentabilidadeAcumulada: rentabilidadeDia
         });
         await this.historicoRentabilidadeRepository.save(snapshot);
       }
