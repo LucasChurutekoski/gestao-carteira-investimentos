@@ -6,6 +6,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Transacao } from './entities/transacao.entity';
 import { UpdateTransacaoDto } from './dto/update-transacao.dto';
 import { enumTipoTransacao } from './enuns/enumTipoTransacao';
+import { HistoricoRentabilidadeService } from 'src/historico-rentabilidade/historico-rentabilidade.service';
 
 
 @Injectable()
@@ -13,7 +14,8 @@ export class TransacaoService {
   constructor(
     private readonly ativoService: AtivoService,
     @InjectRepository(Transacao) private transacaoRepository: Repository<Transacao>,
-    @InjectDataSource() private readonly dataSource: DataSource
+    @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly historicoRentabilidadeService: HistoricoRentabilidadeService
   ) { }
 
   async realizarUmaTransacao(createTransacaoDto: CreateTransacaoDto, usuario) {
@@ -59,6 +61,8 @@ export class TransacaoService {
       await queryRunner.manager.save(novaTransacao);
 
       await queryRunner.commitTransaction();
+
+      await this.historicoRentabilidadeService.atualizaCarteiraPorTransacao(carteira.idCarteira, createTransacaoDto.dataCompra)
       return novaTransacao;
 
     } catch (error) {

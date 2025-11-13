@@ -18,5 +18,6 @@ import { HistoricoRentabilidade } from './entities/historico-rentabilidade.entit
   ],
   controllers: [HistoricoRentabilidadeController],
   providers: [HistoricoRentabilidadeService],
+  exports :[HistoricoRentabilidadeService]
 })
 export class HistoricoRentabilidadeModule {}

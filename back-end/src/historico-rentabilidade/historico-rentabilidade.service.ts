@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Carteira } from 'src/carteira/entities/carteira.entity';
 import { Transacao } from 'src/transacao/entities/transacao.entity';
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import moment from 'moment';
 import { enumTipoTransacao } from 'src/transacao/enuns/enumTipoTransacao';
 import { Ativo } from 'src/ativo/entities/ativo.entity';
@@ -21,16 +21,53 @@ export class HistoricoRentabilidadeService {
     @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository: Repository<HistoricoRentabilidade>
   ) { }
 
+  async atualizaCarteiraPorTransacao(carteiraId: string, dataTransacao: Date) {
+
+    const historicoExistente = await this.historicoRentabilidadeRepository.findOne({
+      where: {
+        carteira: { idCarteira: carteiraId },
+        data: LessThanOrEqual(dataTransacao),
+      },
+      order: { data: 'DESC' },
+    });
+
+    if (!historicoExistente) {
+      return
+    }
+    await this.historicoRentabilidadeRepository.delete({
+      carteira: { idCarteira: carteiraId },
+      data: MoreThanOrEqual(dataTransacao),
+    })
+    await this.calcularRentabilidadeHistorica(carteiraId, dataTransacao)
+
+  }
   @Cron(CronExpression.EVERY_30_MINUTES)
-  async calcularRentabilidadeHistorica() {
+  async calcularRentabilidadeAgendada() {
+    await this.calcularRentabilidadeHistorica()
+  }
+
+  async calcularRentabilidadeHistorica(carteiraId?: string, dataRecalculo?: Date) {
     this.logger.log('WORKER DIÁRIO: Iniciando cálculo de rentabilidade...');
 
-    const carteiras = await this.carteiraRepository.find();
+    let carteiras
+    if (carteiraId) {
+      const carteira = await this.carteiraRepository.findOne({ where: { idCarteira: carteiraId } })
+      if (!carteira) {
+        return
+      }
+      carteiras = [carteira]
+    }
+    else {
+      carteiras = await this.carteiraRepository.find()
+    }
 
     for (const carteiraDoLoop of carteiras) {
       this.logger.log(`Processando carteira: ${carteiraDoLoop.idCarteira}`);
 
       let dataInicio: moment.Moment;
+      if (dataRecalculo) {
+        dataInicio = moment(dataRecalculo)
+      }
       const ultimoSnapshot = await this.historicoRentabilidadeRepository.findOne({
         where: { carteira: { idCarteira: carteiraDoLoop.idCarteira } },
         order: { data: 'DESC' }
@@ -117,13 +154,13 @@ export class HistoricoRentabilidadeService {
               data: dataSnapshot
             }
           });
-          
-          while (precoNoDia?.precoFechamento == 0){
+
+          while (precoNoDia?.precoFechamento == 0) {
             let novaData = moment(dataSnapshot).subtract(1, 'day')
             dataSnapshot = novaData.toDate()
             precoNoDia = await this.historicoAtivoRepository.findOne({
               where: {
-                ativo: { idAtivo: AtivoId},
+                ativo: { idAtivo: AtivoId },
                 data: dataSnapshot
               }
             })
@@ -141,7 +178,7 @@ export class HistoricoRentabilidadeService {
 
         const rentabilidadeDia = (totalCarteiraInvestido > 0) ? ((totalCarteiraAtual / totalCarteiraInvestido) - 1) * 100 : 0;
 
-        if(totalCarteiraAtual <= 0){
+        if (totalCarteiraAtual <= 0) {
           continue
         }
 
