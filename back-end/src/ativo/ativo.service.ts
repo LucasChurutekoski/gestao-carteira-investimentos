@@ -7,9 +7,9 @@ import { delay, firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import yahooFinance from 'yahoo-finance2'
-import YahooFinance from 'yahoo-finance2';
 import { HistoricoAtivo } from 'src/historico-ativos/entities/historico-ativo.entity';
 import moment from 'moment';
+import { Carteira } from 'src/carteira/entities/carteira.entity';
 
 
 @Injectable()
@@ -31,21 +31,23 @@ export class AtivoService {
         { ticker: `${tickerUpper}.SA` }
       ],
     });
+
     if (ativo) {
-      return ativo
+      return ativo;
     }
+
     try {
       const tickerFormatado = `${ticker}.SA`
-      const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+      const yf = new yahooFinance({ suppressNotices: ['yahooSurvey'] });
       let resultado = await yf.quote(tickerFormatado)
 
       if (!resultado) {
-        const tickerFormatado = `${ticker}`
-        const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
-        resultado = await yf.quote(tickerFormatado)
+        const yf = new yahooFinance({ suppressNotices: ['yahooSurvey'] });
+        resultado = await yf.quote(tickerUpper);
       }
+
       if (!resultado) {
-        throw new NotFoundException("Ativo não encontrado")
+        throw new NotFoundException("Ativo não encontrado");
       }
 
       const novoAtivo = this.ativoRepository.create({
@@ -53,17 +55,21 @@ export class AtivoService {
         nomeAtivo: resultado.shortName,
         precoAtual: resultado.regularMarketPrice,
         tipoAtivo: 'acao'
-      })
-      await this.ativoRepository.save(novoAtivo)
-      return novoAtivo
+      });
+
+      await this.ativoRepository.save(novoAtivo);
+
+      this.buscarHistoricoAtivos().catch(err =>
+        this.logger.error("Erro ao atualizar histórico", err)
+      );
+     
+
+      return novoAtivo;
+
+    } catch (error) {
+      console.error(error);
     }
-    catch (error) {
-      console.error(error)
-    }
-    finally{
-      console.log("exetuar ja kgrbkibjhkhjbgkrgbkjhrhbijkrgkjlrbk.jrjk.lbr")
-      await this.buscarHistoricoAtivos()
-    }
+
     try {
       const urlCripto = `https://api.coingecko.com/api/v3/simple/price?ids=${tickerUpper}&vs_currencies=brl`;
       const responseCripto = await firstValueFrom(this.httpService.get(urlCripto))
@@ -72,20 +78,27 @@ export class AtivoService {
       if (!dadosApi || !dadosApi.brl) {
         throw new NotFoundException();
       }
+
       const novoAtivo = this.ativoRepository.create({
         ticker: tickerUpper,
         nomeAtivo: tickerUpper,
         precoAtual: dadosApi.brl,
         tipoAtivo: "cripto"
-      })
-      await this.ativoRepository.save(novoAtivo)
-      await this.buscarHistoricoAtivos()
-      return novoAtivo
+      });
+
+      await this.ativoRepository.save(novoAtivo);
+
+      this.buscarHistoricoAtivos().catch(err =>
+        this.logger.error("Erro ao atualizar histórico", err)
+      );
+
+      return novoAtivo;
 
     } catch (error) {
       throw new NotFoundException(`Ativo "${tickerUpper}" não encontrado (B3 ou Cripto).`);
     }
   }
+
 
   @Cron(CronExpression.EVERY_30_MINUTES_BETWEEN_10AM_AND_7PM)
   async atualizarPrecosWorker() {
@@ -112,12 +125,12 @@ export class AtivoService {
 
       try {
         const tickerFormatado = `${acao.ticker}.SA`
-        const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+        const yf = new yahooFinance({ suppressNotices: ['yahooSurvey'] });
         let resultado = await yf.quote(tickerFormatado)
 
         if (!resultado) {
           const tickerFormatado = `${acao.ticker}`
-          const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+          const yf = new yahooFinance({ suppressNotices: ['yahooSurvey'] });
           resultado = await yf.quote(tickerFormatado)
         }
         if (!resultado) {
@@ -164,7 +177,7 @@ export class AtivoService {
   }
 
   @Cron(CronExpression.EVERY_30_MINUTES)
-  async buscarHistoricoAtivosProgramado(){
+  async buscarHistoricoAtivosProgramado() {
     await this.buscarHistoricoAtivos()
   }
 
@@ -196,9 +209,9 @@ export class AtivoService {
         else {
           dataInicio = dataInicioFixa
         }
-        if(dataInicio >= dataFim){
-          continue
-        }
+        // if(dataInicio >= dataFim){
+        //   continue
+        // }
 
 
         const queryOptions = {
@@ -207,8 +220,8 @@ export class AtivoService {
           interval: '1d',
         } as const;
 
- 
-        const yf = new YahooFinance()
+
+        const yf = new yahooFinance()
         const resultados = await yf.chart(ticker, queryOptions)
         const dadosHistoricos = resultados.quotes
 

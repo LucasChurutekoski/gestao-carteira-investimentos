@@ -1,8 +1,11 @@
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 
 export default function MenuBottom(){
 
     return(
-        <Text>TEste menuzinho em baixo</Text>
+        <View>
+            <Text>TEste menuzinho em baixo</Text>
+            <Text>navegar para perfil</Text>
+        </View>
     )
 }

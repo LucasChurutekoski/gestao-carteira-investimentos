@@ -21,12 +21,15 @@ export class HistoricoRentabilidadeService {
     @InjectRepository(HistoricoRentabilidade) private readonly historicoRentabilidadeRepository: Repository<HistoricoRentabilidade>
   ) { }
 
-  async atualizaCarteiraPorTransacao(carteiraId: string, dataTransacao: Date) {
+  async atualizaCarteiraPorTransacao(carteiraId: string, data: Date) {
+
+    console.log(">>> Atualizando carteira para: ", carteiraId, data);
+
 
     const historicoExistente = await this.historicoRentabilidadeRepository.findOne({
       where: {
         carteira: { idCarteira: carteiraId },
-        data: LessThanOrEqual(dataTransacao),
+        data: LessThanOrEqual(data),
       },
       order: { data: 'DESC' },
     });
@@ -36,9 +39,9 @@ export class HistoricoRentabilidadeService {
     }
     await this.historicoRentabilidadeRepository.delete({
       carteira: { idCarteira: carteiraId },
-      data: MoreThanOrEqual(dataTransacao),
+      data: MoreThanOrEqual(data),
     })
-    await this.calcularRentabilidadeHistorica(carteiraId, dataTransacao)
+    this.calcularRentabilidadeHistorica(carteiraId, data)
 
   }
   @Cron(CronExpression.EVERY_30_MINUTES)
