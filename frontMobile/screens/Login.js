@@ -1,4 +1,4 @@
-import { Button, Text, TextInput, View, Alert } from "react-native";
+import { Button, Text, TextInput, View, Alert, StyleSheet, TouchableOpacity } from "react-native";
 import { useState } from 'react'
 import axios from "axios";
 import * as SecureStorage from 'expo-secure-store'
@@ -37,36 +37,66 @@ export default function LoginScreen({ navigation }) {
     function irParaTelaDeCadastro() {
         navigation.navigate("CriarConta")
     }
-    return (
-        <SafeAreaView>
-        <View>
-            <Text>Bem vindo ao Sistema</Text>
-
-            <Text>Email</Text>
-            <TextInput placeholder="Digite seu email" onChangeText={setEmail}></TextInput>
-
-            <Text>Senha</Text>
-            <TextInput secureTextEntry={true} placeholder="Digite sua senha" onChangeText={setSenha}></TextInput>
-            <Button
-                title="Realizar Login"
-                onPress={handleLogin}
-            />
-
-            <Text>Novo no sistema?</Text>
-            <Button
-                title="Cadastrar-se"
-                onPress={irParaTelaDeCadastro}
-            />
-        </View>
-        </SafeAreaView>
-    )
 
     const styles = StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: '#000',
-            paddingHorizontal: 25,
+            backgroundColor: "#000",
+            paddingHorizontal: 30,
+            alignItems: "center",
+            paddingTop: 50
         },
+        text: {
+            color: "white",
+            margin: 15,
+            textTransform: "uppercase", 
+            marginBottom: 30
+        },
+        TextInput: {
+            backgroundColor: "#505050"
+        },
+        Button: {
+            backgroundColor: "#9333ea",
+            padding: 15,
+            borderRadius: 5,
+            textAlign: "center", 
+            margin: 20
+        },
+        buttonText:{
+            color:"white",
+            fontWeight: 700,
+            textTransform: "uppercase"
+        }
     });
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <View>
+                <Text style={styles.text}>Bem vindo ao Sistema</Text>
+
+                <Text style={styles.text}>Email</Text>
+                <TextInput style={styles.TextInput} placeholder="Digite seu email" onChangeText={setEmail}></TextInput>
+
+                <Text style={styles.text}>Senha</Text>
+                <TextInput style={styles.TextInput} secureTextEntry={true} placeholder="Digite sua senha" onChangeText={setSenha}></TextInput>
+               
+                <TouchableOpacity 
+                style={styles.Button}
+                onPress={handleLogin}
+                >
+                    <Text style={styles.buttonText}>Realizar Login</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.text}>Novo no sistema?</Text>
+
+                <TouchableOpacity
+                    style={styles.Button}
+                    onPress={handleLogin}
+                >
+                    <Text style={styles.buttonText}>Cadastre-se</Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
+    )
 
 }
