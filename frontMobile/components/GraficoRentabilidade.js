@@ -24,8 +24,8 @@ export default function GraficoRentabilidade() {
                 const resposta = await axios.get("http://10.0.2.2:3000/carteira/rentabilidade");
                 const dadosDaApi = resposta.data;
                 const dadosFormatados = dadosDaApi.map((ponto, index) => {
-                    
-                    
+
+
                     const rentabilidadePercentual = Number(ponto.rentabilidade) || 0
 
                     const mostrarLabel = dadosDaApi.length > 10 && index % 5 === 0;
@@ -61,7 +61,7 @@ export default function GraficoRentabilidade() {
             <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
                 Rentabilidade da Carteira (%)
             </Text>
-            
+
             {dadosGrafico.length > 0 ? (
                 <LineChart
                     data={dadosGrafico}
@@ -81,7 +81,9 @@ export default function GraficoRentabilidade() {
                     }}
                 />
             ) : (
-                <Text>Não há dados históricos para exibir.</Text>
+                <View>
+                    <Text>Não há dados históricos para exibir.</Text>
+                </View>
             )}
         </View>
     );
