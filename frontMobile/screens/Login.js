@@ -2,11 +2,14 @@ import { Button, Text, TextInput, View, Alert } from "react-native";
 import { useState } from 'react'
 import axios from "axios";
 import * as SecureStorage from 'expo-secure-store'
+import { SafeAreaView } from "react-native-safe-area-context";
 
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('')
     const [senha, setSenha] = useState('')
+
+
 
     const handleLogin = async () => {
         try {
@@ -35,6 +38,7 @@ export default function LoginScreen({ navigation }) {
         navigation.navigate("CriarConta")
     }
     return (
+        <SafeAreaView>
         <View>
             <Text>Bem vindo ao Sistema</Text>
 
@@ -54,5 +58,15 @@ export default function LoginScreen({ navigation }) {
                 onPress={irParaTelaDeCadastro}
             />
         </View>
+        </SafeAreaView>
     )
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: '#000',
+            paddingHorizontal: 25,
+        },
+    });
+
 }
