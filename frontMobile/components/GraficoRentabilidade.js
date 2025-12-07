@@ -46,7 +46,7 @@ export default function GraficoRentabilidade() {
         };
 
         buscarDados();
-    }, []);
+    }, );
 
     if (estaCarregando) {
         return (

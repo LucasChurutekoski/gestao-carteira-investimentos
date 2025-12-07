@@ -52,7 +52,7 @@ export default function Home({ navigation }) {
                 onPress={abrirModalTransacao}
 
             />
-            <MenuBottom />
+            <MenuBottom navigation={navigation} />
         </SafeAreaView>
     )
 }

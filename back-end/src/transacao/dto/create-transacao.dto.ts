@@ -10,7 +10,7 @@ export class CreateTransacaoDto {
     @IsNumber()
     precoUnitario : number
     @IsNotEmpty({message : "Data da compra é obrigatória"})
-    dataCompra : Date
+    dataTransacao : Date
     @IsNotEmpty({message : "ticker do ativo é obrigatório"})
     ticker : string
 }
