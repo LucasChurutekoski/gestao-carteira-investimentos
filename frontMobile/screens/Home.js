@@ -1,5 +1,4 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import Header from "../components/header";
 import { Button, Text, View } from "react-native";
 import { useEffect, useState } from "react"
 import * as SecureStore from 'expo-secure-store'
@@ -36,7 +35,6 @@ export default function Home({ navigation }) {
     }
     return (
         <SafeAreaView>
-            <Header />
             {usuario ?
                 (
                     <View>
