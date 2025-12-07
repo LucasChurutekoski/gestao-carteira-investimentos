@@ -50,22 +50,30 @@ export default function LoginScreen({ navigation }) {
             color: "white",
             margin: 15,
             textTransform: "uppercase", 
-            marginBottom: 30
+            marginBottom: 10
         },
         TextInput: {
-            backgroundColor: "#505050"
+            backgroundColor: "#505050",
+            borderRadius: 10
         },
         Button: {
             backgroundColor: "#9333ea",
             padding: 15,
-            borderRadius: 5,
-            textAlign: "center", 
-            margin: 20
+            borderRadius: 10,
+            textAlign: "center",
+            marginTop: 20,
+            marginBottom: 40,
+            shadowColor: "#A020F0"
         },
         buttonText:{
             color:"white",
             fontWeight: 700,
-            textTransform: "uppercase"
+            textTransform: "uppercase",
+            textAlign: "center"
+        }, 
+        textNovoNoSistema: {
+            color: "white", 
+            paddingTop: 10
         }
     });
 
@@ -87,7 +95,7 @@ export default function LoginScreen({ navigation }) {
                     <Text style={styles.buttonText}>Realizar Login</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.text}>Novo no sistema?</Text>
+                <Text style={styles.textNovoNoSistema}>Novo no sistema?</Text>
 
                 <TouchableOpacity
                     style={styles.Button}
