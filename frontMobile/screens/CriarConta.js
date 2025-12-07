@@ -1,6 +1,7 @@
-import { Button, Text, TextInput, View, Alert } from "react-native"
+import { Button, Text, TextInput, View, Alert, StyleSheet, TouchableOpacity } from "react-native"
 import { useState } from 'react'
 import axios from "axios";
+
 
 export default function CriarConta({ navigation }) {
     const [nome, setNome] = useState('')
@@ -40,22 +41,74 @@ export default function CriarConta({ navigation }) {
         }
     }
 
+       const styles = StyleSheet.create({
+       container: {
+            flex: 1,
+            backgroundColor: "#000",
+            paddingHorizontal: 80,
+            justifyContent: "center",
+            width: '100%'
+        },
+        title: {
+            textAlign: "center",
+            color: "white",
+            marginVertical: 30,
+            textTransform: "uppercase",
+            fontWeight: 'bold',
+        },
+        text: {
+            color: "white",
+            marginLeft: 10,
+            marginVertical: 10,
+            textTransform: "uppercase",
+            fontWeight: 'bold',
+            fontSize: 12
+        },
+        textInput: {
+            backgroundColor: "#505050",
+            borderRadius: 10,
+            paddingHorizontal: 20, 
+            height: 55,
+            color: '#FFF',
+            width: '100%'
+        },
+        Button: {
+            backgroundColor: "#9333ea",
+            padding: 15,
+            borderRadius: 10,
+            marginTop: 40,
+            marginBottom: 40,
+            alignItems: 'center',
+            shadowColor: "#A020F0",
+            elevation: 5
+        },
+        buttonText:{
+            color:"white",
+            fontWeight: "bold",
+            textTransform: "uppercase",
+            textAlign: "center"
+        }
+    })
+
     return (
-        <View>
-            <Text>Cadastrar-se</Text>
+        <View style={styles.container}>
+            <Text style={styles.title}>Cadastrar-se</Text>
             <Text></Text>
-            <Text>Nome:</Text>
-            <TextInput placeholder="digite seu nome" onChangeText={setNome} />
-            <Text>Email</Text>
-            <TextInput placeholder="digite seu email" onChangeText={setEmail} />
-            <Text>Senha</Text>
-            <TextInput placeholder="digite sua senha" onChangeText={setSenha} />
-            <Text>Confirmar senha</Text>
-            <TextInput placeholder="digite sua senha novamente" onChangeText={setconfirmacaoSenha} />
-            <Button
-                title="Criar Conta"
+            <Text style={styles.text}>Nome:</Text>
+            <TextInput style={styles.textInput} placeholder="digite seu nome" onChangeText={setNome} />
+            <Text style={styles.text}>Email</Text>
+            <TextInput style={styles.textInput} placeholder="digite seu email" onChangeText={setEmail} />
+            <Text style={styles.text}>Senha</Text>
+            <TextInput style={styles.textInput} placeholder="digite sua senha" onChangeText={setSenha} />
+            <Text style={styles.text}>Confirmar senha</Text>
+            <TextInput style={styles.textInput} placeholder="digite sua senha novamente" onChangeText={setconfirmacaoSenha} />
+            <TouchableOpacity
+                style={styles.Button}
                 onPress={criacaoDeConta}
-            />
+            >
+                <Text style={styles.buttonText}>Criar conta</Text>
+            </TouchableOpacity>
         </View>
     )
-}
+
+    }
