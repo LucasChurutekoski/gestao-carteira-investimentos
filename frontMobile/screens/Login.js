@@ -99,7 +99,7 @@ export default function LoginScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.Button}
-                    onPress={handleLogin}
+                    onPress={irParaTelaDeCadastro}
                 >
                     <Text style={styles.buttonText}>Cadastre-se</Text>
                 </TouchableOpacity>
