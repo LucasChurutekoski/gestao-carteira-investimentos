@@ -1,8 +1,7 @@
-
 import { HistoricoRentabilidade } from "src/historico-rentabilidade/entities/historico-rentabilidade.entity";
 import { Transacao } from "src/transacao/entities/transacao.entity";
 import { Usuario } from "src/usuario/entities/usuario.entity";
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('carteiras')
 export class Carteira {
@@ -19,6 +18,5 @@ export class Carteira {
     transacoes: Transacao[]
 
     @OneToMany(() => HistoricoRentabilidade, (historicoRentabilidade) => historicoRentabilidade.carteira)
-    historicoRentabilidade : HistoricoRentabilidade []
-
+    historicoRentabilidade: HistoricoRentabilidade[]
 }

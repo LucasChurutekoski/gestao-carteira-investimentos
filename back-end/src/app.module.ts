@@ -12,7 +12,7 @@ import { TransacaoModule } from './transacao/transacao.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HistoricoAtivosModule } from './historico-ativos/historico-ativos.module';
 import { HistoricoRentabilidadeModule } from './historico-rentabilidade/historico-rentabilidade.module';
-import { Database } from 'sqlite3';
+
 
 @Module({
   imports: [
@@ -29,7 +29,7 @@ import { Database } from 'sqlite3';
       useFactory: (configService: ConfigService) => ({
         type: "sqlite",
         database : "database.sqlite",
-        entities : [__dirname + '/**/*.entity{.ts, .js}'] ,
+        autoLoadEntities : true,
         synchronize: true
       })
     }),
