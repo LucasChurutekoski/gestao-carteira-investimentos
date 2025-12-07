@@ -7,6 +7,7 @@ import LoginScreen from './screens/Login';
 import HomeScreen from './screens/Home';
 import CriarConta from './screens/CriarConta';
 import TransacaoModal from './screens/TransacaoModal';
+import MinhaConta from './screens/MinhaConta';
 
 const Stack = createNativeStackNavigator()
 
@@ -31,15 +32,22 @@ function RootStack() {
         name='CriarConta'
         component={CriarConta}
         options={{
-          title : "Criar Conta"
+          title: "Criar Conta"
         }}
       />
       <Stack.Screen
         name='novaTransacaoModal'
         component={TransacaoModal}
         options={{
-          title : "Realizar uma transação",
-          presentation : "modal"
+          title: "Realizar uma transação",
+          presentation: "modal"
+        }}
+      />
+      <Stack.Screen
+        name='MinhaConta'
+        component={MinhaConta}
+        options={{
+          title: "Minha conta"
         }}
       />
     </Stack.Navigator>
