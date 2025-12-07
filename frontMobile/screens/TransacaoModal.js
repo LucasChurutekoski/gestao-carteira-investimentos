@@ -66,7 +66,7 @@ export default function TransacaoModal({ navigation }) {
             const dadosTransacao = {
                 ticker: ticker,
                 precoUnitario: precoFormatado,
-                dataCompra: dataFormatada,
+                dataTransacao: dataFormatada,
                 tipoTransacao: tipoFormatado,
                 quantidade: quantidadeFormatada
             }
@@ -88,18 +88,26 @@ export default function TransacaoModal({ navigation }) {
             )
 
         } catch (error) {
-            const mensagem = error.response.data.message
-            Alert.alert(
-                "Erro",
-                mensagem,
-                [
-                    {
-                        text: "tentar novamente"
-                    }
-                ]
-            )
+    let mensagemErro = "Ocorreu um erro inesperado.";
+
+    // Verifica se a resposta veio do backend
+    if (error.response && error.response.data) {
+        const { message } = error.response.data;
+
+        // AQUI ESTÁ A CORREÇÃO:
+        // O NestJS retorna 'message' como array quando há erro de validação (DTO)
+        if (Array.isArray(message)) {
+            // Junta todas as mensagens do array em uma única string, separada por quebra de linha
+            mensagemErro = message.join('\n'); 
+        } else if (typeof message === 'string') {
+            mensagemErro = message;
         }
     }
+
+    // Agora 'mensagemErro' é garantidamente uma String
+    Alert.alert("Erro ao salvar", mensagemErro);
+    }
+}
 
     return (
         <View>

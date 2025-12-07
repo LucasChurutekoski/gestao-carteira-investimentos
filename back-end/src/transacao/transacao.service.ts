@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateTransacaoDto } from './dto/create-transacao.dto';
 import { AtivoService } from 'src/ativo/ativo.service';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
@@ -7,72 +7,87 @@ import { Transacao } from './entities/transacao.entity';
 import { UpdateTransacaoDto } from './dto/update-transacao.dto';
 import { enumTipoTransacao } from './enuns/enumTipoTransacao';
 import { HistoricoRentabilidadeService } from 'src/historico-rentabilidade/historico-rentabilidade.service';
+import { Usuario } from 'src/usuario/entities/usuario.entity';
+import { Carteira } from 'src/carteira/entities/carteira.entity';
 
 
 @Injectable()
 export class TransacaoService {
+
+  private readonly logger = new Logger(TransacaoService.name);
+
   constructor(
-    private readonly ativoService: AtivoService,
-    @InjectRepository(Transacao) private transacaoRepository: Repository<Transacao>,
-    @InjectDataSource() private readonly dataSource: DataSource,
-    private readonly historicoRentabilidadeService: HistoricoRentabilidadeService
-  ) { }
+        @InjectRepository(Transacao)
+        private readonly transacaoRepository: Repository<Transacao>,
+        @InjectRepository(Carteira)
+        private readonly carteiraRepository: Repository<Carteira>,
+        private readonly ativoService: AtivoService,
+        private readonly historicoRentabilidadeService: HistoricoRentabilidadeService,
+        private readonly dataSource: DataSource,
+    ) {}
 
-  async realizarUmaTransacao(createTransacaoDto: CreateTransacaoDto, usuario) {
+// Dentro do seu TransacaoService
+async realizarUmaTransacao(createTransacaoDto: CreateTransacaoDto, usuario: Usuario) {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect()
-    await queryRunner.startTransaction()
+        try {
+            // 3. Busca a carteira baseada no Usuário logado
+            // O usuario vem do Controller (req.user), precisamos achar a carteira dele
+            const carteira = await this.carteiraRepository.findOne({ 
+                where: { usuario: { id: usuario.id } } 
+            });
 
-    try {
-      const carteira = usuario.carteira
-      const ativo = await this.ativoService.buscarOuCriarAtivo(createTransacaoDto.ticker)
+            if (!carteira) {
+                throw new NotFoundException(`Carteira não encontrada para o usuário ${usuario.id}.`);
+            }
 
-      if (ativo.tipoAtivo == 'acao' && !Number.isInteger(createTransacaoDto.quantidade)) {
-        throw new BadRequestException("quantidade inválida para este tipo de ativo")
-      }
+            // 4. Busca ou Cria o Ativo
+            const ativo = await this.ativoService.buscarOuCriarAtivo(createTransacaoDto.ticker);
+            if (!ativo) {
+                throw new BadRequestException(`Ativo ${createTransacaoDto.ticker} inválido.`);
+            }
 
-      const transacoesAnteriores = await queryRunner.manager.find(Transacao, {
-        where: { carteira: { idCarteira: carteira.idCarteira }, ativo: { idAtivo: ativo.idAtivo } }
-      })
-      let totalQuantidade = 0.0
+            // 5. Cria a Transação
+            const novaTransacao = queryRunner.manager.create(Transacao, {
+                tipoTransacao: createTransacaoDto.tipoTransacao,
+                quantidade: createTransacaoDto.quantidade,
+                precoUnitario: createTransacaoDto.precoUnitario,
+                dataTransacao: createTransacaoDto.dataTransacao, // Correção: Mapeia dataCompra do DTO
+                ativo: ativo,
+                carteira: carteira
+            });
 
-      for (const t of transacoesAnteriores) {
-        totalQuantidade += (t.tipoTransacao === enumTipoTransacao.compra) ? Number(t.quantidade) : -t.quantidade
-      }
-      if (createTransacaoDto.tipoTransacao === enumTipoTransacao.venda) {
-        totalQuantidade -= Number(createTransacaoDto.quantidade);
-      } else {
-        totalQuantidade += Number(createTransacaoDto.quantidade);
-      }
+            await queryRunner.manager.save(novaTransacao);
 
-      if (totalQuantidade < 0) {
-        throw new BadRequestException(`Saldo insuficiente para esta venda.`);
-      }
+            // 6. COMITA a transação (Salva a compra definitivamente)
+            await queryRunner.commitTransaction();
 
-      const novaTransacao = this.transacaoRepository.create({
-        quantidade: createTransacaoDto.quantidade,
-        precoUnitario: createTransacaoDto.precoUnitario,
-        dataTransacao: createTransacaoDto.dataCompra,
-        tipoTransacao: createTransacaoDto.tipoTransacao,
-        ativo: ativo,
-        carteira: carteira
-      });
-      await queryRunner.manager.save(novaTransacao);
+            // 7. Atualiza o Histórico (APÓS o commit)
+            // Se der erro aqui, não afeta a compra, apenas o gráfico fica desatualizado momentaneamente
+            try {
+                this.logger.log(`Atualizando histórico da carteira ${carteira.idCarteira}...`);
+                await this.historicoRentabilidadeService.atualizaCarteiraPorTransacao(carteira.idCarteira);
+            } catch (erroHistorico) {
+                this.logger.error(`Erro ao atualizar histórico: ${erroHistorico.message}`);
+                // Não damos throw aqui para não retornar erro 500 para o usuário se a compra já deu certo
+            }
 
-      await queryRunner.commitTransaction();
+            return novaTransacao;
 
-      await this.historicoRentabilidadeService.atualizaCarteiraPorTransacao(carteira.idCarteira, createTransacaoDto.dataCompra)
-      return novaTransacao;
-
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      if (error instanceof BadRequestException) throw error;
-      throw new InternalServerErrorException("Não foi possível realizar a transação.");
-    } finally {
-      await queryRunner.release();
+        } catch (error) {
+            // 8. Correção: TransactionNotStartedError
+            // Só faz rollback se a transação ainda estiver ativa (ou seja, erro aconteceu ANTES do commit)
+            if (queryRunner.isTransactionActive) {
+                await queryRunner.rollbackTransaction();
+            }
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
     }
-  }
+
 
   async buscarTodasTransacoes(usuario) {
     const transacoes = await this.transacaoRepository.find({
