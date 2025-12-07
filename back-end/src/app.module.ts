@@ -12,6 +12,7 @@ import { TransacaoModule } from './transacao/transacao.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HistoricoAtivosModule } from './historico-ativos/historico-ativos.module';
 import { HistoricoRentabilidadeModule } from './historico-rentabilidade/historico-rentabilidade.module';
+import { Database } from 'sqlite3';
 
 @Module({
   imports: [
@@ -26,13 +27,9 @@ import { HistoricoRentabilidadeModule } from './historico-rentabilidade/historic
       inject: [ConfigService],
 
       useFactory: (configService: ConfigService) => ({
-        type: "postgres",
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        autoLoadEntities: true,
+        type: "sqlite",
+        database : "database.sqlite",
+        entities : [__dirname + '/**/*.entity{.ts, .js}'] ,
         synchronize: true
       })
     }),
