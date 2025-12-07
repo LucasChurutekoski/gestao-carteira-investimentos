@@ -16,22 +16,13 @@ export class HistoricoRentabilidadeService {
         private readonly historicoRentabilidadeRepository: Repository<HistoricoRentabilidade>,
     ) {}
 
-    // Nome ajustado para bater com a chamada no TransacaoService
     async atualizaCarteiraPorTransacao(idCarteira: string, dataTransacao?: Date) {
-        this.logger.log(`>>> Iniciando cálculo para carteira: ${idCarteira}`);
-
         const carteira = await this.carteiraRepository.findOne({
             where: { idCarteira: idCarteira },
             relations: ['transacoes', 'transacoes.ativo'] 
         });
 
-        if (!carteira) {
-            this.logger.error(`Carteira ${idCarteira} não encontrada.`);
-            return;
-        }
-
-        if (!carteira.transacoes || carteira.transacoes.length === 0) {
-            this.logger.warn(`Carteira ${idCarteira} não possui transações.`);
+        if (!carteira || !carteira.transacoes || carteira.transacoes.length === 0) {
             return;
         }
 
@@ -39,20 +30,20 @@ export class HistoricoRentabilidadeService {
         let valorTotalAtual = 0;
 
         for (const transacao of carteira.transacoes) {
-            // "as any" força o TS a aceitar, caso o nome seja 'valor' ou 'precoUnitario'
+            // Cast para any para garantir acesso ao campo, já que o Entity pode estar desatualizado
             const t = transacao as any; 
-            
-            // Tenta ler 'preco', se não tiver tenta 'valor', se não tiver assume 0
-            const precoPago = Number(t.preco || t.valor || 0);
-            const qtd = Number(t.quantidade);
-            
-            if (!t.ativo) {
-                continue;
-            }
 
+            // Filtra apenas compras para o cálculo de investimento (se houver vendas, a lógica muda)
+            if (t.tipoTransacao && t.tipoTransacao !== 'compra') {
+                continue; 
+            }
+            
+            if (!t.ativo) continue;
+
+            const qtd = Number(t.quantidade);
+            const precoPago = Number(t.precoUnitario); // Campo corrigido baseado no seu log
             const precoAtualAtivo = Number(t.ativo.precoAtual);
             
-            // Cálculos
             valorTotalInvestido += qtd * precoPago;
             valorTotalAtual += qtd * precoAtualAtivo;
         }
@@ -72,7 +63,8 @@ export class HistoricoRentabilidadeService {
             });
 
             await this.historicoRentabilidadeRepository.save(novoHistorico);
-            this.logger.log(`>>> Histórico salvo: Inv R$${valorTotalInvestido} | Atual R$${valorTotalAtual} | Rent ${rentabilidade.toFixed(2)}%`);
+            
+            this.logger.log(`Rentabilidade atualizada: Inv R$${valorTotalInvestido.toFixed(2)} | Atual R$${valorTotalAtual.toFixed(2)} | Rent ${rentabilidade.toFixed(2)}%`);
         } catch (error) {
             this.logger.error(`Erro ao salvar histórico: ${error.message}`);
         }
