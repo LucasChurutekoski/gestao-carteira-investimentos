@@ -54,7 +54,8 @@ export default function LoginScreen({ navigation }) {
         },
         TextInput: {
             backgroundColor: "#505050",
-            borderRadius: 10
+            borderRadius: 10,
+            color: "#FFF"
         },
         Button: {
             backgroundColor: "#9333ea",
