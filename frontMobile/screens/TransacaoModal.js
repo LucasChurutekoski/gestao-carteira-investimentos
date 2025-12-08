@@ -1,4 +1,4 @@
-import { Alert, Button, Text, TextInput, View } from "react-native";
+import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useState } from 'react'
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -58,7 +58,7 @@ export default function TransacaoModal({ navigation }) {
                 return;
             }
 
-            const precoFormatado = parseFloat(precoUnitario.replace(',', '.'))
+            const precoFormatado = parseFloat(precoUnitario)
             const quantidadeFormatada = parseFloat(quantidade.replace(',', '.'))
             const tipoFormatado = tipoOperacao.toLowerCase()
             const dataFormatada = data.toISOString().split('T')[0];
@@ -88,14 +88,14 @@ export default function TransacaoModal({ navigation }) {
             )
 
         } catch (error) {
+            console.log(error);
+            
     let mensagemErro = "Ocorreu um erro inesperado.";
 
     // Verifica se a resposta veio do backend
     if (error.response && error.response.data) {
         const { message } = error.response.data;
 
-        // AQUI ESTÁ A CORREÇÃO:
-        // O NestJS retorna 'message' como array quando há erro de validação (DTO)
         if (Array.isArray(message)) {
             // Junta todas as mensagens do array em uma única string, separada por quebra de linha
             mensagemErro = message.join('\n'); 
@@ -110,47 +110,178 @@ export default function TransacaoModal({ navigation }) {
 }
 
     return (
-        <View>
-            <Text>Informe o ticker do ativo Ou o nome da criptomoeda</Text>
-            <TextInput placeholder="Itub4" onChangeText={setTicker} value={ticker} />
-            <Button
-                title="Buscar Ativo"
-                onPress={buscarAtivo}
-            />
-            <Text>Informe o preço unitário</Text>
-            <TextInput placeholder="29.80" onChangeText={setPrecoUnitario} value={precoUnitario} />
-            <Text>Informe a quantidade</Text>
-            <TextInput placeholder="20" onChangeText={setQuantidade} value={quantidade} />
-            <Text>Tipo da transação</Text>
-            <Picker
-                selectedValue={tipoOperacao}
-                onValueChange={(itemValue, itemIndex) => {
-                    setTipoOperacao(itemValue)
-                }}
-            >
-                <Picker.Item label="Compra" value="compra" />
-                <Picker.Item label="Venda" value="venda" />
-            </Picker>
-            <Text>{data.toLocaleDateString('pt-br')}</Text>
-            <Button
-                title="Alterar a data"
-                onPress={toggleDatePicker}
-            />
-            {showPicker && (
-                <DateTimePicker
-                    testId="dateTimePicker"
-                    value={data}
-                    mode={'date'}
-                    is24Hour={true}
-                    display='default'
-                    onChange={onChangeDate}
-                />
-            )}
-            <Button
-                title="Salvar transação"
-                onPress={salvarTransacao}
-            />
+        <View style={styles.container}> 
+                
+                <Text style={styles.headerTitle}>Nova Transação</Text>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Ticker do Ativo</Text>
+                    <View style={styles.rowSearch}> 
+                        <TextInput 
+                            style={[styles.input, { flex: 1 }]}
+                            placeholder="Ex: ITUB4" 
+                            onChangeText={setTicker} 
+                            value={ticker} 
+                        />
+                        <TouchableOpacity 
+                        style={styles.searchButton} 
+                        onPress={buscarAtivo}>
+                            <Text style={styles.searchButtonText}>Buscar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <View style={styles.row}>
+                    <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                        <Text style={styles.label}>Preço Unitário</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            placeholder="0,00" 
+                            keyboardType="numeric"
+                            onChangeText={setPrecoUnitario} 
+                            value={precoUnitario} 
+                        />
+                    </View>
+
+                    <View style={[styles.inputGroup, { flex: 1 }]}>
+                        <Text style={styles.label}>Quantidade</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            placeholder="0" 
+                            keyboardType="numeric"
+                            onChangeText={setQuantidade} 
+                            value={String(quantidade)} 
+                        />
+                    </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Tipo da Transação</Text>
+                    <View style={styles.input}> 
+                        <Picker
+                            selectedValue={tipoOperacao}
+                            onValueChange={(itemValue) => setTipoOperacao(itemValue)}
+                            style={{ width: '100%', height: 50 }}
+                        >
+                            <Picker.Item label="Compra" value="compra" />
+                            <Picker.Item label="Venda" value="venda" />
+                        </Picker>
+                    </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Data da Transação</Text>
+                    <TouchableOpacity style={styles.dateButton} onPress={toggleDatePicker}>
+                        <Text style={styles.dateText}>{data.toLocaleDateString('pt-br')}</Text>
+                        <Text style={styles.changeDateText}>Alterar</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {showPicker && (
+                    <DateTimePicker
+                        testId="dateTimePicker"
+                        value={data}
+                        mode={'date'}
+                        is24Hour={true}
+                        display='default'
+                        onChange={onChangeDate}
+                    />
+                )}
+                <TouchableOpacity style={styles.saveButton} onPress={salvarTransacao}>
+                    <Text style={styles.saveButtonText}>Salvar transação</Text>
+                </TouchableOpacity>
 
         </View>
     )
+
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#F2F2F2',
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 20,
+        marginTop: 10,
+    },
+    inputGroup: {
+        marginBottom: 20,
+    },
+    label: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 8,
+        fontWeight: '500',
+    },
+    input: {
+        backgroundColor: '#FFF',
+        height: 50,
+        borderRadius: 10, 
+        paddingHorizontal: 15,
+        fontSize: 16,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        elevation: 2, 
+    },
+    rowSearch: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    searchButton: {
+        backgroundColor: '#333',
+        height: 50,
+        width: 80,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 12,
+        marginLeft: 10,
+    },
+    searchButtonText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    dateButton: {
+        backgroundColor: '#FFF',
+        height: 50,
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    dateText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    changeDateText: {
+        color: '#A020F0',
+        fontWeight: 'bold',
+    },
+    saveButton: {
+        backgroundColor: '#A020F0',
+        height: 55,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 5,
+    },
+    saveButtonText: {
+        color: '#FFF',
+        fontSize: 18,
+        fontWeight: 'bold',
+    }
+});

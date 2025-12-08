@@ -36,41 +36,17 @@ export default function Home({ navigation }) {
 
     const styles = StyleSheet.create({
     container: {
-        flex: 1,
         backgroundColor: '#F2F2F2',
-    },
-    cardLabel: {
-        fontSize: 16,
-        color: '#000',
-        marginBottom: 10,
-    },
-    cardValue: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#000',
-        marginBottom: 20,
-    },
-    whiteCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        padding: 20,
-        minHeight: 300,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 3,
+        flex: 1,
+        paddingTop: 40,
+        alignItems: 'center',     
+        justifyContent: 'flex-start'
     },
     Title: {
         fontSize: 18,
         color: '#333',
         marginBottom: 20,
         textAlign: 'center',
-    },
-    Container: {
-        flex: 1,
-        alignItems: 'center', 
-        justifyContent: 'center'
     },
     Button: {
         position: 'absolute',
@@ -92,7 +68,7 @@ export default function Home({ navigation }) {
     }
 });
     return (
-        <SafeAreaView>
+        <SafeAreaView style={styles.container}>
             {usuario ?
                 (
                     <View>
