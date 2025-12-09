@@ -37,13 +37,14 @@ export class AtivoService {
         }
 
         try {
-            // yahooFinance.suppressNotices(['yahooSurvey']); // Removido para evitar erro de TS
-            let resultado: any; // Tipagem 'any' para evitar erro de propriedade inexistente
+            let resultado: any;
             try {
-                resultado = await yahooFinance.quote(tickerB3);
+                const yf =  new yahooFinance()
+                resultado = await yf.quote(tickerB3);
             } catch (e) {
                 try {
-                    resultado = await yahooFinance.quote(tickerUpper);
+                     const yf =  new yahooFinance()
+                resultado = await yf.quote(tickerUpper);
                 } catch (e2) {
                     resultado = null;
                 }
@@ -103,7 +104,8 @@ export class AtivoService {
     private async atualizarAcoes(acoes: Ativo[]) {
         for (const acao of acoes) {
             try {
-                const resultado: any = await yahooFinance.quote(acao.ticker);
+                const yf = new yahooFinance()
+                const resultado: any = await yf.quote(acao.ticker);
                 if (resultado && resultado.regularMarketPrice) {
                     await this.ativoRepository.update(
                         { idAtivo: acao.idAtivo },
@@ -181,7 +183,8 @@ export class AtivoService {
         }
 
         try {
-            const resultado: any = await yahooFinance.chart(tickerApi, {
+            const yf = new yahooFinance()
+            const resultado: any = await yf.chart(tickerApi, {
                 period1: dataInicio,
                 period2: dataFim,
                 interval: '1d'
@@ -205,7 +208,6 @@ export class AtivoService {
             if (batchSalvar.length > 0) {
                 await this.historicoRepository.save(batchSalvar);
             }
-
         } catch (error) { }
     }
 }
