@@ -28,7 +28,7 @@ export default function Home({ navigation }) {
             }
         }
         buscaToken()
-    }, [])
+    }, )
 
     function abrirModalTransacao() {
         navigation.navigate("novaTransacaoModal")
