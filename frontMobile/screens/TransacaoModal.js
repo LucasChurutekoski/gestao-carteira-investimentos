@@ -1,5 +1,5 @@
-import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useState } from 'react'
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from "axios";
@@ -11,6 +11,7 @@ export default function TransacaoModal({ navigation }) {
     const [precoUnitario, setPrecoUnitario] = useState('')
     const [showPicker, setShowPicker] = useState(false)
     const [data, setData] = useState(new Date())
+    const [carregando, setCarregando] = useState(false)
 
     const onChangeDate = (event, selectedDate) => {
         const currentDate = selectedDate || data
@@ -20,30 +21,25 @@ export default function TransacaoModal({ navigation }) {
 
     const limpaCampos = () => {
         setTicker('')
-        setTipoOperacao('')
+        setTipoOperacao('compra')
         setQuantidade('')
         setPrecoUnitario('')
     }
 
     const buscarAtivo = async () => {
+        if (!ticker) return;
+        setCarregando(true);
         try {
             const resposta = await axios.get(`http://10.0.2.2:3000/ativo/buscar?ticker=${ticker}`)
             if (resposta.data) {
                 setTicker(resposta.data.ticker)
-                setPrecoUnitario(resposta.data.precoAtual)
+                setPrecoUnitario(String(resposta.data.precoAtual))
             }
         } catch (error) {
-            Alert.alert(
-                "erro",
-                "ação não encontrada",
-                [
-                    {
-                        text: "tentar novamente"
-                    }
-                ]
-            )
+            Alert.alert("Erro", "Ação não encontrada", [{ text: "OK" }])
+        } finally {
+            setCarregando(false);
         }
-
     }
 
     const toggleDatePicker = () => {
@@ -53,13 +49,12 @@ export default function TransacaoModal({ navigation }) {
     const salvarTransacao = async () => {
         try {
             if (!data || !precoUnitario || !quantidade || !tipoOperacao || !ticker) {
-                console.warn("Tentativa de salvar com campos vazios");
                 Alert.alert("Erro", "Todos os campos são obrigatórios.");
                 return;
             }
 
-            const precoFormatado = parseFloat(precoUnitario)
-            const quantidadeFormatada = parseFloat(quantidade.replace(',', '.'))
+            const precoFormatado = parseFloat(precoUnitario.toString().replace(',', '.'))
+            const quantidadeFormatada = parseFloat(quantidade.toString().replace(',', '.'))
             const tipoFormatado = tipoOperacao.toLowerCase()
             const dataFormatada = data.toISOString().split('T')[0];
 
@@ -71,82 +66,69 @@ export default function TransacaoModal({ navigation }) {
                 quantidade: quantidadeFormatada
             }
 
-            const response = await axios.post('http://10.0.2.2:3000/transacao', dadosTransacao)
+            await axios.post('http://10.0.2.2:3000/transacao', dadosTransacao)
             Alert.alert(
-                "Transação registrada com sucesso",
-                "Deseja fazer outra transação?",
+                "Sucesso",
+                "Transação registrada!",
                 [
-                    {
-                        text: "Sim",
-                        onPress: limpaCampos
-                    },
-                    {
-                        text: "Não"
-
-                    }
+                    { text: "Nova Transação", onPress: limpaCampos },
+                    { text: "Sair", onPress: () => navigation.goBack() }
                 ]
             )
 
         } catch (error) {
-            console.log(error);
-            
-    let mensagemErro = "Ocorreu um erro inesperado.";
-
-    // Verifica se a resposta veio do backend
-    if (error.response && error.response.data) {
-        const { message } = error.response.data;
-
-        if (Array.isArray(message)) {
-            // Junta todas as mensagens do array em uma única string, separada por quebra de linha
-            mensagemErro = message.join('\n'); 
-        } else if (typeof message === 'string') {
-            mensagemErro = message;
+            let mensagemErro = "Ocorreu um erro inesperado.";
+            if (error.response && error.response.data) {
+                const { message } = error.response.data;
+                mensagemErro = Array.isArray(message) ? message.join('\n') : message;
+            }
+            Alert.alert("Erro ao salvar", mensagemErro);
         }
     }
 
-    // Agora 'mensagemErro' é garantidamente uma String
-    Alert.alert("Erro ao salvar", mensagemErro);
-    }
-}
-
     return (
-        <View style={styles.container}> 
+        <View style={estilos.conteinerPrincipal}>
+            <ScrollView contentContainerStyle={estilos.scrollConteudo}>
                 
-                <Text style={styles.headerTitle}>Nova Transação</Text>
-
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Ticker do Ativo</Text>
-                    <View style={styles.rowSearch}> 
-                        <TextInput 
-                            style={[styles.input, { flex: 1 }]}
-                            placeholder="Ex: ITUB4" 
-                            onChangeText={setTicker} 
-                            value={ticker} 
-                        />
-                        <TouchableOpacity 
-                        style={styles.searchButton} 
-                        onPress={buscarAtivo}>
-                            <Text style={styles.searchButtonText}>Buscar</Text>
-                        </TouchableOpacity>
-                    </View>
+                <Text style={estilos.titulo}>Nova Transação</Text>
+                <Text style={estilos.rotulo}>Ticker do Ativo</Text>
+                <View style={estilos.linhaBusca}>
+                    <TextInput 
+                        style={estilos.inputBusca}
+                        placeholder="Ex: ITUB4" 
+                        onChangeText={setTicker} 
+                        value={ticker} 
+                        autoCapitalize="characters"
+                    />
+                    <TouchableOpacity 
+                        style={estilos.botaoBusca} 
+                        onPress={buscarAtivo}
+                        disabled={carregando}
+                    >
+                        {carregando ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <Text style={estilos.textoBotaoBusca}>Buscar</Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
-                <View style={styles.row}>
-                    <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                        <Text style={styles.label}>Preço Unitário</Text>
+                <View style={estilos.linhaDupla}>
+                    <View style={estilos.colunaMetade}>
+                        <Text style={estilos.rotulo}>Preço Unitário</Text>
                         <TextInput 
-                            style={styles.input} 
-                            placeholder="0,00" 
+                            style={estilos.input} 
+                            placeholder="0.00" 
                             keyboardType="numeric"
                             onChangeText={setPrecoUnitario} 
-                            value={precoUnitario} 
+                            value={String(precoUnitario)} 
                         />
                     </View>
 
-                    <View style={[styles.inputGroup, { flex: 1 }]}>
-                        <Text style={styles.label}>Quantidade</Text>
+                    <View style={estilos.colunaMetade}>
+                        <Text style={estilos.rotulo}>Quantidade</Text>
                         <TextInput 
-                            style={styles.input} 
+                            style={estilos.input} 
                             placeholder="0" 
                             keyboardType="numeric"
                             onChangeText={setQuantidade} 
@@ -155,31 +137,27 @@ export default function TransacaoModal({ navigation }) {
                     </View>
                 </View>
 
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Tipo da Transação</Text>
-                    <View style={styles.input}> 
-                        <Picker
-                            selectedValue={tipoOperacao}
-                            onValueChange={(itemValue) => setTipoOperacao(itemValue)}
-                            style={{ width: '100%', height: 50 }}
-                        >
-                            <Picker.Item label="Compra" value="compra" />
-                            <Picker.Item label="Venda" value="venda" />
-                        </Picker>
-                    </View>
+                <Text style={estilos.rotulo}>Tipo da Transação</Text>
+                <View style={estilos.containerPicker}>
+                    <Picker
+                        selectedValue={tipoOperacao}
+                        onValueChange={(itemValue) => setTipoOperacao(itemValue)}
+                        style={estilos.picker}
+                    >
+                        <Picker.Item label="Compra" value="compra" />
+                        <Picker.Item label="Venda" value="venda" />
+                    </Picker>
                 </View>
 
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Data da Transação</Text>
-                    <TouchableOpacity style={styles.dateButton} onPress={toggleDatePicker}>
-                        <Text style={styles.dateText}>{data.toLocaleDateString('pt-br')}</Text>
-                        <Text style={styles.changeDateText}>Alterar</Text>
-                    </TouchableOpacity>
-                </View>
+                <Text style={estilos.rotulo}>Data da Transação</Text>
+                <TouchableOpacity style={estilos.botaoData} onPress={toggleDatePicker}>
+                    <Text style={estilos.textoData}>{data.toLocaleDateString('pt-br')}</Text>
+                    <Text style={estilos.textoAlterarData}>Alterar</Text>
+                </TouchableOpacity>
 
                 {showPicker && (
                     <DateTimePicker
-                        testId="dateTimePicker"
+                        testID="dateTimePicker"
                         value={data}
                         mode={'date'}
                         is24Hour={true}
@@ -187,68 +165,101 @@ export default function TransacaoModal({ navigation }) {
                         onChange={onChangeDate}
                     />
                 )}
-                <TouchableOpacity style={styles.saveButton} onPress={salvarTransacao}>
-                    <Text style={styles.saveButtonText}>Salvar transação</Text>
+
+                <TouchableOpacity style={estilos.botaoSalvar} onPress={salvarTransacao}>
+                    <Text style={estilos.textoBotaoSalvar}>Salvar transação</Text>
                 </TouchableOpacity>
 
+            </ScrollView>
         </View>
     )
-
 }
 
-const styles = StyleSheet.create({
-    container: {
+const estilos = StyleSheet.create({
+    conteinerPrincipal: {
         flex: 1,
-        backgroundColor: '#F2F2F2',
+        backgroundColor: '#F9F9F9',
     },
-    headerTitle: {
-        fontSize: 24,
+    scrollConteudo: {
+        padding: 20,
+        paddingBottom: 40,
+    },
+    titulo: {
+        fontSize: 26,
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: 20,
+        marginBottom: 25,
         marginTop: 10,
+        textAlign: 'center'
     },
-    inputGroup: {
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 16,
+    rotulo: {
+        fontSize: 14,
         color: '#666',
-        marginBottom: 8,
-        fontWeight: '500',
+        marginBottom: 6,
+        fontWeight: '600',
+        marginLeft: 4,
     },
     input: {
         backgroundColor: '#FFF',
         height: 50,
-        borderRadius: 10, 
+        borderRadius: 12,
         paddingHorizontal: 15,
         fontSize: 16,
         borderWidth: 1,
         borderColor: '#E0E0E0',
-        elevation: 2, 
+        marginBottom: 20,
+        color: '#333',
     },
-    rowSearch: {
+    linhaBusca: {
         flexDirection: 'row',
-        alignItems: 'center',
-    },
-    searchButton: {
-        backgroundColor: '#333',
+        marginBottom: 20,
         height: 50,
+    },
+    inputBusca: {
+        flex: 1,
+        backgroundColor: '#FFF',
+        borderTopLeftRadius: 12,
+        borderBottomLeftRadius: 12,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRightWidth: 0,
+    },
+    botaoBusca: {
+        backgroundColor: '#333',
         width: 80,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 12,
-        marginLeft: 10,
+        borderTopRightRadius: 12,
+        borderBottomRightRadius: 12,
     },
-    searchButtonText: {
+    textoBotaoBusca: {
         color: '#FFF',
         fontWeight: 'bold',
     },
-    row: {
+
+    linhaDupla: {
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
-    dateButton: {
+    colunaMetade: {
+        width: '48%',
+    },
+    containerPicker: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        marginBottom: 20,
+        height: 50,
+        justifyContent: 'center',
+    },
+    picker: {
+        width: '100%',
+        color: '#333',
+    },
+    botaoData: {
         backgroundColor: '#FFF',
         height: 50,
         borderRadius: 12,
@@ -258,28 +269,29 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         borderWidth: 1,
         borderColor: '#E0E0E0',
+        marginBottom: 30,
     },
-    dateText: {
+    textoData: {
         fontSize: 16,
         color: '#333',
     },
-    changeDateText: {
+    textoAlterarData: {
         color: '#A020F0',
         fontWeight: 'bold',
     },
-    saveButton: {
+    botaoSalvar: {
         backgroundColor: '#A020F0',
-        height: 55,
-        borderRadius: 15,
+        height: 56,
+        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
         elevation: 5,
     },
-    saveButtonText: {
+    textoBotaoSalvar: {
         color: '#FFF',
         fontSize: 18,
         fontWeight: 'bold',
